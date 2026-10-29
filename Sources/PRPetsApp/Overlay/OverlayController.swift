@@ -142,7 +142,7 @@ final class OverlayController: NSObject {
     private func trackMouse() {
         let windowPoint = panel.convertPoint(fromScreen: NSEvent.mouseLocation)
         let viewPoint = yardView.convert(windowPoint, from: nil)
-        let hit = yardView.scene?.hitTest(viewPoint, using: yardView.sprites)
+        let hit = yardView.scene?.hitTest(viewPoint, using: yardView.sprites, keepingHoverOn: hoveredPetID)
         let isInteracting = hit != nil || draggingPlacement != nil
         if panel.ignoresMouseEvents == isInteracting { panel.ignoresMouseEvents = !isInteracting }
         let hoveredPet: PullRequestID? = if case .pet(let id) = hit { id } else { nil }

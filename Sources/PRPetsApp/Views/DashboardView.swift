@@ -138,7 +138,7 @@ private struct QueueGroupView: View {
     let board: ReviewBoard
     @ObservedObject var model: AppModel
 
-    private var isCollapsed: Bool { model.collapsedGroupIDs.contains(group.id) }
+    private var isCollapsed: Bool { group.canCollapse && model.collapsedGroupIDs.contains(group.id) }
 
     private var visibleMembers: [PullRequest] {
         isCollapsed ? group.highlightedMembers : group.stack.members
@@ -147,21 +147,9 @@ private struct QueueGroupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if group.stack.isStacked {
-                Button {
+                StackHeader(group: group, isCollapsed: isCollapsed) {
                     withAnimation(.snappy) { model.toggleCollapsed(group) }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
-                        Text("Stack of \(group.stack.members.count) in \(group.stack.members[0].repository.name)")
-                        Spacer()
-                    }
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 10)
-                .padding(.top, 8)
             }
             ForEach(visibleMembers) { member in
                 PullRequestRow(
@@ -175,6 +163,37 @@ private struct QueueGroupView: View {
             }
         }
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.04)))
+    }
+}
+
+/// "Stack of 4 in web". A collapse chevron only when collapsing would hide something.
+private struct StackHeader: View {
+    let group: QueueGroup
+    let isCollapsed: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        let title = Text("Stack of \(group.stack.members.count) in \(group.stack.members[0].repository.name)")
+        Group {
+            if group.canCollapse {
+                Button(action: toggle) {
+                    HStack(spacing: 4) {
+                        Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                        title
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(isCollapsed ? "Show the whole stack" : "Show only the PRs in this column")
+            } else {
+                title.frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .padding(.top, 8)
     }
 }
 

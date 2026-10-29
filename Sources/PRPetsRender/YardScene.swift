@@ -67,9 +67,13 @@ public struct YardScene {
     }
 
     public func placement(of pet: YardPet, using sprites: SpriteCache) -> PetPlacement {
+        placement(of: pet, in: pet.pose(at: yard.clock), using: sprites)
+    }
+
+    private func placement(of pet: YardPet, in pose: PetPose, using sprites: SpriteCache) -> PetPlacement {
         let scale = viewport.scale
         let adornment = PetAdornment(wearsStackCollar: pet.entry.stackPosition != nil)
-        let frame = sprites.frame(for: pet.genome, adornment: adornment, pose: pet.pose(at: yard.clock), facing: pet.facing)
+        let frame = sprites.frame(for: pet.genome, adornment: adornment, pose: pose, facing: pet.facing)
         let foot = viewport.footPoint(of: pet.position)
         let spriteRect = CGRect(
             x: foot.x - CGFloat(PetSpriteSheet.frameWidth) / 2 * scale,
@@ -90,8 +94,14 @@ public struct YardScene {
     }
 
     /// The pet or doghouse under a point, front-most first. Pets get a little slack so they're easy to catch.
-    public func hitTest(_ point: CGPoint, using sprites: SpriteCache) -> SceneHit? {
+    /// The pet already being hovered keeps the hover while the cursor is anywhere it covers standing or sitting,
+    /// since it sits down when hovered and would otherwise slip out from under the cursor and flicker.
+    public func hitTest(_ point: CGPoint, using sprites: SpriteCache, keepingHoverOn hoveredPetID: PullRequestID? = nil) -> SceneHit? {
         let slack = max(2, viewport.scale)
+        if let hoveredPet = hoveredPetID.flatMap(yard.pet(withID:)),
+           hoverArea(of: hoveredPet, using: sprites).insetBy(dx: -slack, dy: -slack).contains(point) {
+            return .pet(hoveredPet.id)
+        }
         let placements = placements(using: sprites)
         let inFront = placements.filter { $0.pet.position.depth >= YardViewport.doghouseDepth }
         let behind = placements.filter { $0.pet.position.depth < YardViewport.doghouseDepth }
@@ -105,9 +115,8 @@ public struct YardScene {
         return petHit(in: behind)
     }
 
-    /// Every rectangle that should catch the mouse; the rest of the overlay lets clicks through.
-    public func interactiveRects(using sprites: SpriteCache) -> [CGRect] {
-        let slack = max(2, viewport.scale)
-        return [viewport.doghouseRect] + placements(using: sprites).map { $0.bodyRect.insetBy(dx: -slack, dy: -slack) }
+    /// Everything a pet covers in its current pose and while standing.
+    public func hoverArea(of pet: YardPet, using sprites: SpriteCache) -> CGRect {
+        placement(of: pet, using: sprites).bodyRect.union(placement(of: pet, in: .stand, using: sprites).bodyRect)
     }
 }

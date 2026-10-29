@@ -54,6 +54,9 @@ public struct QueueGroup: Identifiable, Hashable, Sendable {
     public func isHighlighted(_ pullRequest: PullRequest) -> Bool { highlightedIDs.contains(pullRequest.id) }
 
     public var highlightedMembers: [PullRequest] { stack.members.filter(isHighlighted) }
+
+    /// Whether collapsing to the highlighted members would hide anything.
+    public var canCollapse: Bool { highlightedIDs.count < stack.members.count }
 }
 
 /// The single place that decides which lane each pull request belongs in.

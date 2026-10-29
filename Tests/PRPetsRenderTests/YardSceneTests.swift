@@ -47,6 +47,28 @@ struct YardSceneTests {
         #expect(scene.hitTest(CGPoint(x: 5, y: 5), using: sprites) == nil, "empty overlay lets clicks through")
     }
 
+    @Test func aHoveredPetStaysHoveredAfterItSitsDown() throws {
+        let viewport = viewport()
+        var yard = Yard(geometry: viewport.geometry)
+        let pullRequest = PullRequestFixture.make(1)
+        yard.reconcile(with: PetRoster(entries: [PetRosterEntry(
+            id: pullRequest.id, genome: GenomeFactory.genome(for: Seed(1)), label: "alice", stackPosition: nil
+        )]))
+        var random = SeededRandom(seed: Seed(1))
+        for _ in 0..<90 { yard.advance(by: 1.0 / 30, using: &random) }
+        yard.hold(pullRequest.id)
+        let scene = YardScene(viewport: viewport, yard: yard, doghouse: DoghouseStatus())
+        let sprites = SpriteCache()
+        let area = scene.hoverArea(of: yard.pets[0], using: sprites)
+
+        // Somewhere the standing pet covered but the sitting pet doesn't: where the cursor used to fall off.
+        let points = stride(from: area.minX, through: area.maxX, by: 1).flatMap { x in
+            stride(from: area.minY, through: area.maxY, by: 1).map { CGPoint(x: x, y: $0) }
+        }
+        let uncoveredBySitting = try #require(points.first { scene.hitTest($0, using: sprites) != .pet(pullRequest.id) })
+        #expect(scene.hitTest(uncoveredBySitting, using: sprites, keepingHoverOn: pullRequest.id) == .pet(pullRequest.id))
+    }
+
     @Test func renderingDrawsSomething() {
         let viewport = viewport()
         let scene = YardScene(viewport: viewport, yard: Yard(geometry: viewport.geometry), doghouse: DoghouseStatus(waitingCount: 2))

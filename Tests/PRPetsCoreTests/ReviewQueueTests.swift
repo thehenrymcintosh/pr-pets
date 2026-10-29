@@ -102,6 +102,15 @@ struct StackTests {
         #expect(StackIndex(pullRequests: [first, second]).stacks.flatMap(\.members).count == 2)
     }
 
+    @Test func aStackCollapsesOnlyWhenSomeMembersAreElsewhere() {
+        let fullyRequested = PullRequestFixture.stack([10, 11]) { _, pullRequest in pullRequest.with(requestedReviewers: [me]) }
+        let partlyRequested = PullRequestFixture.stack([20, 21], by: "bob") { offset, pullRequest in
+            offset == 0 ? pullRequest.with(requestedReviewers: [me]) : pullRequest
+        }
+        let groups = queue(reviewRequested: fullyRequested + [partlyRequested[0]], other: [partlyRequested[1]]).groups(in: .needsMyReview)
+        #expect(groups.map(\.canCollapse) == [false, true])
+    }
+
     @Test func laneGroupsHighlightOnlyTheirOwnMembers() {
         let demo = ReviewQueue(snapshot: DemoScript.snapshot(at: 0), policy: QueuePolicy())
         let checkout = demo.groups(in: .needsMyReview).first { $0.stack.isStacked }
