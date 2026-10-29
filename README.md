@@ -50,6 +50,10 @@ Pets pick spots away from one another, walk in front of and behind the doghouse,
 
 <p align="center"><img src="docs/images/scenario-screen-width.gif" alt="Pets roaming across the full width of the screen"></p>
 
+### Your own PRs, too
+
+By default only review requests get pets. Turn on **Settings → Pets → Who gets a pet** for your own PRs that need something from you, or that are waiting on reviewers. This is handy if PRs get opened for you in the background. Their pets wear a reminder as a name tag: *ready to merge*, *changes requested*, *needs reviewers*, *finish draft* or *in review*.
+
 ### Stacked PRs
 
 When PRs are based on each other's branches, PR Pets treats them as a stack. Every pet in a stack shares a look, wears a blue collar with a gold tag, and its name tag shows where it sits in the stack, such as `alice · 2/4`.
@@ -111,7 +115,7 @@ Open Settings from the doghouse's right-click menu, the menu bar paw, or the das
 | Tab | What's there |
 | --- | --- |
 | **GitHub** | How often to check (default every 3 minutes), `gh` path, GitHub Enterprise host, whether team review requests count, only-these-orgs, ignored repositories, whether to fetch whole stacks |
-| **Pets** | Send inside, go home once someone else approves, hover cards, maximum pets, name tag (username, name, repo or none), which species can appear |
+| **Pets** | Which columns get pets (just reviews by default; also your own PRs that need action or are in review), send inside, go home once someone else approves, hover cards, maximum pets, name tag (username, name, repo or none), which species can appear |
 | **Placement** | Scale, roam near the doghouse (and how far) or across the whole screen, reset position, menu bar icon, launch at login, automatic update checks |
 
 Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
@@ -129,7 +133,7 @@ Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
 You need macOS 14+ and either Xcode or just the Command Line Tools (`xcode-select --install`).
 
 ```sh
-make test         # 71 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
+make test         # 80 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
 make demo         # run the app against scripted demo PRs
 make preview      # render sprite sheets and scenario GIFs to ./previews
 make screenshots  # run the real app on demo data and save its windows to ./previews/app

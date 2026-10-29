@@ -68,6 +68,20 @@ private struct PetSettings: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
+        Section("Who gets a pet") {
+            ForEach(Lane.allCases, id: \.self) { lane in
+                Toggle(lane.petToggleTitle, isOn: Binding(
+                    get: { model.preferences.petLanes.contains(lane) },
+                    set: { enabled in
+                        model.updatePreferences { preferences in
+                            if enabled { preferences.petLanes.insert(lane) } else { preferences.petLanes.remove(lane) }
+                        }
+                    }
+                ))
+            }
+            Text("Pets for your own PRs wear what they're waiting on as their name tag, like \"ready to merge\".")
+                .font(.caption).foregroundStyle(.secondary)
+        }
         Section("Behaviour") {
             Toggle("Send pets inside", isOn: setting(model, \.petsAreInside))
             Toggle("Send a pet home once someone else approves", isOn: setting(model, \.hideWhenApprovedByOthers))

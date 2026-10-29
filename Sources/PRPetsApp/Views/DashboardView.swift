@@ -104,6 +104,9 @@ private struct LaneColumn: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(lane.title).font(.headline)
+                if board.presence.laneHasPets(lane) {
+                    Image(systemName: "pawprint.fill").foregroundStyle(.secondary).help("PRs in this column get a pet")
+                }
                 Spacer()
                 Text("\(board.queue.pullRequests(in: lane).count)")
                     .font(.headline.monospacedDigit())
@@ -205,8 +208,11 @@ private struct PullRequestRow: View {
     let board: ReviewBoard
     @ObservedObject var model: AppModel
 
+    private var hasPet: Bool { isHighlighted && board.presence.laneHasPets(lane) }
+
+    /// Why this PR's pet isn't out, when its column normally has pets.
     private var absence: PetAbsence? {
-        lane == .needsMyReview && isHighlighted ? board.presence.absence(of: pullRequest) : nil
+        hasPet ? board.presence.absence(of: pullRequest) : nil
     }
 
     var body: some View {
@@ -223,7 +229,7 @@ private struct PullRequestRow: View {
                     if let reason = board.queue.placement(of: pullRequest)?.reason, isHighlighted {
                         Tag(text: reason, colour: .orange)
                     }
-                    if let absence { Tag(text: absence.description, colour: .purple) }
+                    if let absenceText = absence?.dashboardText { Tag(text: absenceText, colour: .purple) }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -237,7 +243,7 @@ private struct PullRequestRow: View {
         .onTapGesture { model.open(pullRequest) }
         .contextMenu {
             Button("Open on GitHub") { model.open(pullRequest) }
-            if lane == .needsMyReview, isHighlighted {
+            if hasPet {
                 if absence.isSuppression {
                     Button("Let Pet Back Out") { model.restore(pullRequest) }
                 } else {
@@ -275,9 +281,17 @@ extension Lane {
 
     var explanation: String {
         switch self {
-        case .needsMyReview: "Someone asked you to review these. Each one has a pet."
+        case .needsMyReview: "Someone asked you to review these."
         case .needsMyAction: "Your PRs that are approved, have changes requested, or have no reviewers yet."
         case .waitingOnOthers: "Your PRs with reviewers requested."
+        }
+    }
+
+    var petToggleTitle: String {
+        switch self {
+        case .needsMyReview: "PRs waiting for my review"
+        case .needsMyAction: "My PRs that need something from me"
+        case .waitingOnOthers: "My PRs waiting on reviewers"
         }
     }
 
@@ -304,9 +318,11 @@ extension QueuePlacement {
     }
 }
 
-extension PetAbsence: CustomStringConvertible {
-    public var description: String {
+extension PetAbsence {
+    /// nil for absences that need no explanation.
+    var dashboardText: String? {
         switch self {
+        case .laneWithoutPets: nil
         case .suppressed(.muted): "Muted"
         case .suppressed(.dismissed): "Dismissed"
         case .approvedByOthers(let approvers): "Approved by \(approvers.map(\.rawValue).joined(separator: ", "))"

@@ -21,6 +21,7 @@ struct Scenario {
     /// Simulated seconds skipped before recording starts, so pets are already out.
     var warmUp: Double = 0
     var roamingArea: RoamingArea = .nearDoghouse
+    var petLanes: Set<Lane> = PetPresencePolicy.defaultPetLanes
 
     static let all: [Scenario] = [
         Scenario(name: "arrivals", steps: [.demoTime(70), .run(seconds: 7)]),
@@ -33,6 +34,7 @@ struct Scenario {
         ], warmUp: 8),
         Scenario(name: "hover", steps: [.demoTime(70), .run(seconds: 1), .hover(number: 213), .run(seconds: 3)], warmUp: 10),
         Scenario(name: "screen-width", steps: [.demoTime(70), .run(seconds: 16)], warmUp: 3, roamingArea: .screenWidth),
+        Scenario(name: "own-prs", steps: [.demoTime(0), .run(seconds: 10)], warmUp: 8, petLanes: Set(Lane.allCases)),
     ]
 }
 
@@ -46,6 +48,7 @@ struct ScenarioRecorder {
     func record() -> [CGImage] {
         var preferences = Preferences()
         preferences.roamingArea = scenario.roamingArea
+        preferences.petLanes = scenario.petLanes
         preferences.roamingWidth = 600
         var ledger = TriageLedger()
         var identities = PetIdentityRegistry()

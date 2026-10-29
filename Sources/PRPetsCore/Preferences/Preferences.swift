@@ -36,6 +36,7 @@ public struct Preferences: Hashable, Codable, Sendable {
     public var showHoverCards: Bool = true
     public var allowedSpecies: [Species] = Species.allCases
     public var petsAreInside: Bool = false
+    public var petLanes: Set<Lane> = PetPresencePolicy.defaultPetLanes
 
     // Placement
     /// Points per art pixel.
@@ -70,7 +71,8 @@ public struct Preferences: Hashable, Codable, Sendable {
             hideWhenApprovedByOthers: hideWhenApprovedByOthers,
             maximumPets: maximumPets,
             labelStyle: labelStyle,
-            allowedSpecies: allowedSpecies
+            allowedSpecies: allowedSpecies,
+            petLanes: petLanes
         )
     }
 
@@ -119,6 +121,7 @@ extension Preferences {
         showHoverCards = value(.showHoverCards, defaults.showHoverCards)
         allowedSpecies = value(.allowedSpecies, defaults.allowedSpecies)
         petsAreInside = value(.petsAreInside, defaults.petsAreInside)
+        petLanes = value(.petLanes, defaults.petLanes)
         scale = Self.scaleRange.clamp(value(.scale, defaults.scale))
         roamingArea = value(.roamingArea, defaults.roamingArea)
         roamingWidth = value(.roamingWidth, defaults.roamingWidth)

@@ -37,13 +37,19 @@ public struct PetPresencePolicy: Hashable, Codable, Sendable {
     public var maximumPets: Int
     public var labelStyle: PetLabelStyle
     public var allowedSpecies: [Species]
+    /// Which dashboard columns get pets. Reviews only, by default.
+    public var petLanes: Set<Lane>
+
+    public static let defaultPetLanes: Set<Lane> = [.needsMyReview]
 
     public init(
         hideWhenApprovedByOthers: Bool = true,
         maximumPets: Int = 12,
         labelStyle: PetLabelStyle = .authorLogin,
-        allowedSpecies: [Species] = Species.allCases
+        allowedSpecies: [Species] = Species.allCases,
+        petLanes: Set<Lane> = PetPresencePolicy.defaultPetLanes
     ) {
+        self.petLanes = petLanes
         self.hideWhenApprovedByOthers = hideWhenApprovedByOthers
         self.maximumPets = maximumPets
         self.labelStyle = labelStyle
@@ -51,9 +57,12 @@ public struct PetPresencePolicy: Hashable, Codable, Sendable {
     }
 }
 
-/// Why a PR awaiting the viewer's review has no pet outside. Shown in the dashboard.
+/// Why a PR has no pet outside. The dashboard shows the user-relevant ones.
 public enum PetAbsence: Hashable, Sendable {
+    /// Its column doesn't get pets (or it isn't in a column at all).
+    case laneWithoutPets
     case suppressed(Suppression)
+    /// Someone else approved a PR the viewer was asked to review.
     case approvedByOthers([Login])
 }
 
@@ -73,15 +82,19 @@ public struct PetPresence: Sendable {
 
     /// `nil` means the PR deserves a pet; otherwise why it doesn't.
     public func absence(of pullRequest: PullRequest) -> PetAbsence? {
+        guard let lane = queue.placement(of: pullRequest)?.lane, policy.petLanes.contains(lane) else { return .laneWithoutPets }
         if let suppression = ledger.activeSuppression(for: pullRequest) { return .suppressed(suppression) }
+        // Only a review request is "handled" by someone else's approval; your own approved PR still needs merging.
         let otherApprovers = pullRequest.approvers(excluding: queue.viewer)
-        let isHandledByOthers = policy.hideWhenApprovedByOthers && !otherApprovers.isEmpty
+        let isHandledByOthers = lane == .needsMyReview && policy.hideWhenApprovedByOthers && !otherApprovers.isEmpty
         return isHandledByOthers ? .approvedByOthers(otherApprovers) : nil
     }
 
+    public func laneHasPets(_ lane: Lane) -> Bool { policy.petLanes.contains(lane) }
+
     public func roster(petsAreInside: Bool) -> PetRoster {
         guard !petsAreInside else { return .empty }
-        let entries = queue.pullRequests(in: .needsMyReview)
+        let entries = Lane.allCases.flatMap(queue.pullRequests(in:))
             .filter { absence(of: $0) == nil }
             .prefix(policy.maximumPets)
             .map(entry(for:))
@@ -108,11 +121,28 @@ public struct PetPresence: Sendable {
     }
 
     private func label(for pullRequest: PullRequest) -> String? {
-        switch policy.labelStyle {
+        guard policy.labelStyle != .hidden else { return nil }
+        // Your own name over your own PR says nothing; say what it's waiting for instead.
+        if let reminder = queue.placement(of: pullRequest)?.ownPullRequestReminder { return reminder }
+        return switch policy.labelStyle {
         case .authorLogin: pullRequest.author.login.rawValue
         case .authorName: pullRequest.author.displayName ?? pullRequest.author.login.rawValue
         case .repository: pullRequest.repository.name
         case .hidden: nil
+        }
+    }
+}
+
+extension QueuePlacement {
+    /// The name tag for a pet whose PR is the viewer's own.
+    var ownPullRequestReminder: String? {
+        switch self {
+        case .needsMyReview: nil
+        case .needsMyAction(.addressChangesRequested): "changes requested"
+        case .needsMyAction(.merge): "ready to merge"
+        case .needsMyAction(.finishDraft): "finish draft"
+        case .needsMyAction(.requestReviewers): "needs reviewers"
+        case .waitingOnOthers: "in review"
         }
     }
 }

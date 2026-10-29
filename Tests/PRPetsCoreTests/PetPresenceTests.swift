@@ -95,6 +95,39 @@ struct PetPresenceTests {
         #expect(label(.hidden) == nil)
     }
 
+    @Test func byDefaultOnlyReviewRequestsGetPets() {
+        let request = PullRequestFixture.make(1, requestedReviewers: [me])
+        let mine = PullRequestFixture.make(2, by: "you", reviewDecision: .approved)
+        let roster = presence([request], context: [mine]).roster(petsAreInside: false)
+        #expect(roster.entries.map(\.id) == [request.id])
+        #expect(presence([request], context: [mine]).absence(of: mine) == .laneWithoutPets)
+    }
+
+    @Test func myOwnPullRequestsCanGetPetsToo() {
+        let request = PullRequestFixture.make(1, requestedReviewers: [me])
+        let approved = PullRequestFixture.make(2, by: "you", reviewDecision: .approved,
+                                               latestReviews: [SubmittedReview(reviewer: Login("bob"), verdict: .approved)])
+        let waiting = PullRequestFixture.make(3, by: "you", requestedReviewers: [.user(Login("bob"))])
+        let actionOnly = PetPresencePolicy(petLanes: [.needsMyReview, .needsMyAction])
+
+        let roster = presence([request], context: [approved, waiting], policy: actionOnly).roster(petsAreInside: false)
+
+        #expect(roster.entries.map(\.id) == [request.id, approved.id], "someone else's approval doesn't send your own PR's pet home")
+        #expect(roster.entries.map(\.label) == ["alice", "ready to merge"])
+    }
+
+    @Test func everyColumnCanHavePets() {
+        let waiting = PullRequestFixture.make(3, by: "you", requestedReviewers: [.user(Login("bob"))])
+        let roster = presence([], context: [waiting], policy: PetPresencePolicy(petLanes: Set(Lane.allCases))).roster(petsAreInside: false)
+        #expect(roster.entries.map(\.label) == ["in review"])
+    }
+
+    @Test func mutingWorksForMyOwnPullRequestsToo() {
+        let mine = PullRequestFixture.make(2, by: "you", reviewDecision: .changesRequested)
+        let petPresence = presence([], context: [mine], ledger: TriageLedger().muting(mine, at: now), policy: PetPresencePolicy(petLanes: [.needsMyAction]))
+        #expect(petPresence.roster(petsAreInside: false) == .empty)
+    }
+
     @Test func stackedPetsShareAGenomeAndShowTheirPosition() {
         let stack = PullRequestFixture.stack([10, 11, 12]) { offset, pullRequest in
             offset == 0 ? pullRequest : pullRequest.with(requestedReviewers: [me])
