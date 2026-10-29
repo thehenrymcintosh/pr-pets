@@ -8,6 +8,14 @@ public enum PetBehaviour {
     static let candidateSpotCount = 10
     static let shortestWorthwhileWalk: Double = 6
 
+    /// Seconds of the startle spent mid-hop.
+    static let startleHopDuration: Double = 0.25
+
+    /// How long a pet freezes before running home. Varies per pet so a crowd scatters rather than marching off together.
+    static func startleDuration(for pet: YardPet) -> Double {
+        0.55 + 0.35 * pet.individuality
+    }
+
     public static func walkingSpeed(of pet: YardPet) -> Double {
         9 + 9 * pet.genome.temperament.energy
     }
@@ -84,7 +92,7 @@ public enum PetBehaviour {
 
     static func isCrowded(_ pet: YardPet, in yard: Yard) -> Bool {
         yard.pets.contains { other in
-            other.id != pet.id && other.activity != .returningHome
+            other.id != pet.id && !other.activity.isHeadingHome
                 && other.position.spacing(to: pet.position) < personalSpace
         }
     }

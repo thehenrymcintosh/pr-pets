@@ -34,14 +34,14 @@ Want to look before you have a review waiting? Open **Settings → GitHub → Pu
 </tr>
 <tr>
 <td><b>New review requests.</b> Each one queues at the door, and the pets come out one at a time.</td>
-<td><b>Handled elsewhere.</b> Someone else approved Bob's PR, so his pet heads home. Then Dan's gets muted.</td>
+<td><b>Handled elsewhere.</b> Someone else approved Bob's PR, so his pet jumps with a little <b>!</b> and runs home. Then Dan's gets muted.</td>
 </tr>
 <tr>
 <td><img src="docs/images/scenario-kennel.gif" alt="Every pet runs into the doghouse, eyes peek out of the door, then they all come back out"></td>
 <td><img src="docs/images/scenario-hover.gif" alt="Hovering a pet makes it sit and shows a card with the PR title and line counts"></td>
 </tr>
 <tr>
-<td><b>Double-click the doghouse</b> to send everyone inside; double-click again to let them out. A pair of eyes peeks out while they wait.</td>
+<td><b>Double-click the doghouse</b> to send everyone inside: they startle, then scatter home. Double-click again to let them out. A pair of eyes peeks out while they wait.</td>
 <td><b>Hover a pet.</b> It stops, sits, looks at you, and shows the PR's title, number and lines changed.</td>
 </tr>
 </table>
@@ -134,7 +134,7 @@ Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
 You need macOS 14+ and either Xcode or just the Command Line Tools (`xcode-select --install`).
 
 ```sh
-make test         # 91 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
+make test         # 93 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
 make demo         # run the app against scripted demo PRs
 make preview      # render sprite sheets and scenario GIFs to ./previews
 make screenshots  # run the real app on demo data and save its windows to ./previews/app

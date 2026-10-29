@@ -34,7 +34,7 @@ struct PetSkeleton: Sendable {
         let standingBodyBottom = ground - legLength
 
         switch pose {
-        case .stand, .standBlink, .walk1, .walk2, .walk3, .walk4, .run1, .run2:
+        case .stand, .standBlink, .walk1, .walk2, .walk3, .walk4, .run1, .run2, .startle:
             let gait = Self.gait(for: pose)
             let bodyBottom = standingBodyBottom - gait.lift
             let footRow = ground - gait.airborne
@@ -100,6 +100,7 @@ struct PetSkeleton: Sendable {
         case .walk4: Gait(lift: 1)
         case .run1: Gait(nearBack: -2, nearFront: 2, farBack: -1, farFront: 1, lift: 1, tailSway: 1)
         case .run2: Gait(nearBack: 1, nearFront: -1, farBack: 2, farFront: -2, lift: 2, airborne: 1)
+        case .startle: Gait(nearBack: -1, nearFront: 1, lift: 2, airborne: 2, tailSway: 1)
         default: Gait()
         }
     }

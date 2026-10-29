@@ -53,7 +53,7 @@ struct YardTests {
         yard.run(seconds: 20, random: &random)
 
         yard.reconcile(with: roster([2]))
-        #expect(yard.pets.filter { $0.activity == .returningHome }.count == 2)
+        #expect(yard.pets.filter(\.activity.isHeadingHome).count == 2)
         yard.run(seconds: 10, random: &random)
         #expect(yard.pets.map(\.entry.label) == ["pet 2"])
     }
@@ -66,9 +66,41 @@ struct YardTests {
 
         yard.reconcile(with: .empty)
         yard.reconcile(with: roster([1]))
-        #expect(yard.pets.first?.activity != .returningHome)
+        #expect(yard.pets.first?.activity.isHeadingHome == false)
         yard.run(seconds: 10, random: &random)
         #expect(yard.pets.count == 1)
+    }
+
+    @Test func aPetStartlesBeforeItRunsHome() {
+        var yard = Yard(geometry: geometry)
+        var random = SeededRandom(seed: Seed(11))
+        yard.reconcile(with: roster([1]))
+        yard.run(seconds: 10, random: &random)
+        let before = yard.pets[0].position
+
+        yard.reconcile(with: .empty)
+        #expect(yard.pets[0].isStartled)
+        #expect(yard.pets[0].pose(at: yard.clock) == .startle)
+        yard.run(seconds: 0.4, random: &random)
+        #expect(yard.pets[0].isStartled, "still frozen")
+        #expect(yard.pets[0].position == before, "a startled pet doesn't move")
+        yard.run(seconds: 0.6, random: &random)
+        #expect(yard.pets.first?.activity == .returningHome)
+    }
+
+    @Test func aCrowdScattersRatherThanLeavingInStep() {
+        var yard = Yard(geometry: geometry)
+        var random = SeededRandom(seed: Seed(12))
+        yard.reconcile(with: roster(Array(1...5)))
+        yard.run(seconds: 10, random: &random)
+        yard.reconcile(with: .empty)
+        var boltTimes: [PullRequestID: Double] = [:]
+        yard.run(seconds: 1.5, random: &random) { yard in
+            for pet in yard.pets where pet.activity == .returningHome && boltTimes[pet.id] == nil {
+                boltTimes[pet.id] = yard.clock
+            }
+        }
+        #expect(Set(boltTimes.values).count > 1)
     }
 
     @Test func emptyingTheRosterSendsEveryoneInside() {
@@ -119,9 +151,10 @@ struct YardTests {
         var random = SeededRandom(seed: Seed(8))
         yard.reconcile(with: roster(Array(1...5)))
         var posesSeen = Set<PetPose>()
-        yard.run(seconds: 600, random: &random) { yard in
-            yard.pets.forEach { posesSeen.insert($0.pose(at: yard.clock)) }
-        }
+        let recordPoses: (Yard) -> Void = { yard in yard.pets.forEach { posesSeen.insert($0.pose(at: yard.clock)) } }
+        yard.run(seconds: 600, random: &random, every: recordPoses)
+        yard.reconcile(with: .empty)
+        yard.run(seconds: 5, random: &random, every: recordPoses)
         #expect(posesSeen == Set(PetPose.allCases))
     }
 
