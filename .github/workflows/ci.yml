@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: make test
+      - name: Build app bundle
+        run: make app
+      - name: Render previews
+        run: .build/release/pr-pets-preview all previews
+      - name: Upload previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: previews
+          path: previews

@@ -1,0 +1,204 @@
+{
+  "data": {
+    "context0": {
+      "nodes": [
+        {
+          "id": "PR_web100",
+          "number": 100,
+          "title": "Add checkout service",
+          "url": "https://github.com/acme/web/pull/100",
+          "isDraft": false,
+          "additions": 10,
+          "deletions": 2,
+          "changedFiles": 1,
+          "createdAt": "2026-10-20T09:00:00Z",
+          "updatedAt": "2026-10-28T10:00:00Z",
+          "headRefName": "alice/step-1",
+          "baseRefName": "main",
+          "headRefOid": "c0ffeeb100",
+          "isCrossRepository": false,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "repository": {
+            "nameWithOwner": "acme/web"
+          },
+          "author": {
+            "login": "alice",
+            "name": null
+          },
+          "reviewRequests": {
+            "nodes": [
+              {
+                "requestedReviewer": {
+                  "__typename": "User",
+                  "login": "zed"
+                }
+              }
+            ]
+          },
+          "latestReviews": {
+            "nodes": []
+          }
+        },
+        {
+          "id": "PR_web101",
+          "number": 101,
+          "title": "Extract checkout form state",
+          "url": "https://github.com/acme/web/pull/101",
+          "isDraft": false,
+          "additions": 240,
+          "deletions": 88,
+          "changedFiles": 6,
+          "createdAt": "2026-10-20T09:00:00Z",
+          "updatedAt": "2026-10-28T10:00:00Z",
+          "headRefName": "alice/step-2",
+          "baseRefName": "alice/step-1",
+          "headRefOid": "c0ffeeb101",
+          "isCrossRepository": false,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "repository": {
+            "nameWithOwner": "acme/web"
+          },
+          "author": {
+            "login": "alice",
+            "name": "Alice Liddell"
+          },
+          "reviewRequests": {
+            "nodes": [
+              {
+                "requestedReviewer": {
+                  "__typename": "User",
+                  "login": "octo-me"
+                }
+              }
+            ]
+          },
+          "latestReviews": {
+            "nodes": []
+          }
+        },
+        {
+          "id": "PR_web102",
+          "number": 102,
+          "title": "Wire checkout into cart page",
+          "url": "https://github.com/acme/web/pull/102",
+          "isDraft": true,
+          "additions": 10,
+          "deletions": 2,
+          "changedFiles": 1,
+          "createdAt": "2026-10-20T09:00:00Z",
+          "updatedAt": "2026-10-28T10:00:00Z",
+          "headRefName": "alice/step-3",
+          "baseRefName": "alice/step-2",
+          "headRefOid": "c0ffeeb102",
+          "isCrossRepository": false,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "repository": {
+            "nameWithOwner": "acme/web"
+          },
+          "author": {
+            "login": "alice",
+            "name": null
+          },
+          "reviewRequests": {
+            "nodes": []
+          },
+          "latestReviews": {
+            "nodes": []
+          }
+        }
+      ]
+    },
+    "context1": {
+      "nodes": [
+        {
+          "id": "PR_api55",
+          "number": 55,
+          "title": "Rate limit webhook retries",
+          "url": "https://github.com/acme/api/pull/55",
+          "isDraft": false,
+          "additions": 42,
+          "deletions": 7,
+          "changedFiles": 2,
+          "createdAt": "2026-10-20T09:00:00Z",
+          "updatedAt": "2026-10-28T10:00:00Z",
+          "headRefName": "bob/retries",
+          "baseRefName": "main",
+          "headRefOid": "c0ffeepi55",
+          "isCrossRepository": false,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "repository": {
+            "nameWithOwner": "acme/api"
+          },
+          "author": {
+            "login": "bob",
+            "name": null
+          },
+          "reviewRequests": {
+            "nodes": [
+              {
+                "requestedReviewer": {
+                  "__typename": "Team",
+                  "slug": "platform"
+                }
+              },
+              {
+                "requestedReviewer": null
+              }
+            ]
+          },
+          "latestReviews": {
+            "nodes": []
+          }
+        }
+      ]
+    },
+    "context2": {
+      "nodes": [
+        {
+          "id": "PR_api60",
+          "number": 60,
+          "title": "Bump tokio",
+          "url": "https://github.com/acme/api/pull/60",
+          "isDraft": false,
+          "additions": 3,
+          "deletions": 3,
+          "changedFiles": 1,
+          "createdAt": "2026-10-20T09:00:00Z",
+          "updatedAt": "2026-10-28T10:00:00Z",
+          "headRefName": "carol/tokio",
+          "baseRefName": "main",
+          "headRefOid": "c0ffeepi60",
+          "isCrossRepository": false,
+          "reviewDecision": "APPROVED",
+          "repository": {
+            "nameWithOwner": "acme/api"
+          },
+          "author": {
+            "login": "carol",
+            "name": null
+          },
+          "reviewRequests": {
+            "nodes": [
+              {
+                "requestedReviewer": {
+                  "__typename": "User",
+                  "login": "octo-me"
+                }
+              }
+            ]
+          },
+          "latestReviews": {
+            "nodes": [
+              {
+                "state": "APPROVED",
+                "author": {
+                  "login": "dave"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

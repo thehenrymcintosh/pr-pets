@@ -1,0 +1,39 @@
+name: Release
+
+# Push a tag like v0.2.0 to build, checksum and publish a release.
+# The app's updater and install.sh both download its PR-Pets.zip and PR-Pets.zip.sha256.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Test
+        run: make test
+
+      - name: Build universal app
+        run: make dist UNIVERSAL=1 VERSION="${GITHUB_REF_NAME#v}"
+
+      - name: Check the bundle
+        run: |
+          lipo -archs ".build/PR Pets.app/Contents/MacOS/PRPets"
+          plutil -extract CFBundleShortVersionString raw ".build/PR Pets.app/Contents/Info.plist"
+          codesign --verify --verbose ".build/PR Pets.app"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            .build/PR-Pets.zip .build/PR-Pets.zip.sha256 \
+            --title "PR Pets $GITHUB_REF_NAME" \
+            --generate-notes
