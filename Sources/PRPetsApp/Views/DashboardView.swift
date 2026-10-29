@@ -215,6 +215,16 @@ private struct PullRequestRow: View {
         hasPet ? board.presence.absence(of: pullRequest) : nil
     }
 
+    private var statusTags: some View {
+        HStack(spacing: 4) {
+            if pullRequest.isDraft { Tag(text: "Draft", colour: .gray) }
+            if let reason = board.queue.placement(of: pullRequest)?.reason, isHighlighted {
+                Tag(text: reason, colour: .orange)
+            }
+            if let absenceText = absence?.dashboardText { Tag(text: absenceText, colour: .purple) }
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             if let stackPosition { StackBadge(position: stackPosition) }
@@ -222,25 +232,31 @@ private struct PullRequestRow: View {
                 Text(pullRequest.title)
                     .font(.callout.weight(isHighlighted ? .semibold : .regular))
                     .lineLimit(2)
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     Text(pullRequest.shortReference)
                         .lineLimit(1)
                         .truncationMode(.middle)
                     // Your own PRs don't need your name on them.
                     if !pullRequest.isAuthored(by: board.queue.viewer) {
-                        Text(pullRequest.author.login.rawValue).lineLimit(1)
+                        Text("· \(pullRequest.author.login.rawValue)").lineLimit(1)
                     }
-                    if pullRequest.isDraft { Tag(text: "Draft", colour: .gray) }
-                    if let reason = board.queue.placement(of: pullRequest)?.reason, isHighlighted {
-                        Tag(text: reason, colour: .orange)
-                    }
-                    if let absenceText = absence?.dashboardText { Tag(text: absenceText, colour: .purple) }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                LineDeltaView(lineDelta: pullRequest.lineDelta).font(.caption)
+                // Pills sit right of the line counts, or drop to their own line when the column is too narrow.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        LineDeltaView(lineDelta: pullRequest.lineDelta).font(.caption)
+                        Spacer(minLength: 8)
+                        statusTags
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        LineDeltaView(lineDelta: pullRequest.lineDelta).font(.caption)
+                        statusTags
+                    }
+                }
             }
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(10)
         .opacity(isHighlighted ? 1 : 0.45)
@@ -270,8 +286,8 @@ private struct Tag: View {
             .font(.caption2.weight(.semibold))
             .lineLimit(1)
             .fixedSize()
-            .padding(.horizontal, 5)
-            .padding(.vertical, 1)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
             .background(Capsule().fill(colour.opacity(0.15)))
             .foregroundStyle(colour)
     }

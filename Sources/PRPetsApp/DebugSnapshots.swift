@@ -26,6 +26,10 @@ enum DebugSnapshots {
                     card.frame = CGRect(origin: .zero, size: card.fittingSize)
                     try write(card, to: directory.appending(path: "pet-card.png"))
                 }
+                // The dashboard at its minimum width, where rows are most cramped.
+                let narrowDashboard = NSHostingView(rootView: DashboardView(model: model, updates: updates, showSettings: {}))
+                narrowDashboard.frame = CGRect(x: 0, y: 0, width: 900, height: 520)
+                try write(narrowDashboard, to: directory.appending(path: "dashboard-narrow.png"))
                 let tabs: [(String, AnyView)] = [
                     ("github", AnyView(GitHubSettings(model: model))),
                     ("pets", AnyView(PetSettings(model: model))),
