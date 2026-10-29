@@ -1,3 +1,4 @@
+import AppKit
 import PRPetsCore
 import SwiftUI
 
@@ -11,8 +12,10 @@ struct SettingsView: View {
                 .tabItem { Label("GitHub", systemImage: "arrow.triangle.pull") }
             Form { PetSettings(model: model) }
                 .tabItem { Label("Pets", systemImage: "pawprint") }
-            Form { PlacementSettings(model: model, updates: updates) }
+            Form { PlacementSettings(model: model) }
                 .tabItem { Label("Placement", systemImage: "rectangle.bottomhalf.inset.filled") }
+            Form { SystemSettings(model: model, updates: updates) }
+                .tabItem { Label("System", systemImage: "gearshape") }
         }
         .formStyle(.grouped)
         .frame(width: 520, height: 460)
@@ -37,7 +40,7 @@ private func listSetting(_ model: AppModel, _ keyPath: WritableKeyPath<Preferenc
     )
 }
 
-private struct GitHubSettings: View {
+struct GitHubSettings: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
@@ -64,7 +67,7 @@ private struct GitHubSettings: View {
     }
 }
 
-private struct PetSettings: View {
+struct PetSettings: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
@@ -113,9 +116,8 @@ private struct PetSettings: View {
     }
 }
 
-private struct PlacementSettings: View {
+struct PlacementSettings: View {
     @ObservedObject var model: AppModel
-    @ObservedObject var updates: UpdateController
 
     var body: some View {
         Section("Size") {
@@ -144,16 +146,32 @@ private struct PlacementSettings: View {
                 .font(.caption).foregroundStyle(.secondary)
             Button("Reset position") { model.updatePreferences { $0.placement = .default } }
         }
+    }
+}
+
+struct SystemSettings: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject var updates: UpdateController
+
+    var body: some View {
         Section("App") {
             Toggle("Show in menu bar", isOn: setting(model, \.showMenuBarIcon))
             Toggle("Launch at login", isOn: setting(model, \.launchAtLogin))
         }
         Section("Updates") {
             Toggle("Check for updates automatically", isOn: setting(model, \.checkForUpdatesAutomatically))
-            LabeledContent("Version \(updates.installedVersion?.description ?? "unknown")") {
+            LabeledContent(updates.installedVersion.map { "Version \($0)" } ?? "Development build") {
                 UpdateButton(updates: updates)
             }
             UpdateStatusText(status: updates.status)
+        }
+        Section {
+            HStack {
+                Text("PR Pets keeps running in the background until you quit it.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Quit PR Pets", role: .destructive) { NSApp.terminate(nil) }
+            }
         }
     }
 }

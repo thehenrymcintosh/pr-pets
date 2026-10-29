@@ -215,6 +215,20 @@ private struct PullRequestRow: View {
         hasPet ? board.presence.absence(of: pullRequest) : nil
     }
 
+    private var statusPills: [StatusPill] {
+        let placement = isHighlighted ? board.queue.placement(of: pullRequest) : nil
+        let placementPill = placement?.pill
+        // An own draft already says "Finish draft"; anyone else's draft gets a plain marker.
+        let draftPill: StatusPill? = pullRequest.isDraft && placement != .needsMyAction(.finishDraft) ? .draft : nil
+        return [draftPill, placementPill, absence?.pill].compactMap { $0 }
+    }
+
+    private var statusTags: some View {
+        HStack(spacing: 4) {
+            ForEach(statusPills, id: \.self, content: PillView.init)
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             if let stackPosition { StackBadge(position: stackPosition) }
@@ -222,20 +236,31 @@ private struct PullRequestRow: View {
                 Text(pullRequest.title)
                     .font(.callout.weight(isHighlighted ? .semibold : .regular))
                     .lineLimit(2)
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     Text(pullRequest.shortReference)
-                    Text(pullRequest.author.login.rawValue)
-                    if pullRequest.isDraft { Tag(text: "Draft", colour: .gray) }
-                    if let reason = board.queue.placement(of: pullRequest)?.reason, isHighlighted {
-                        Tag(text: reason, colour: .orange)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    // Your own PRs don't need your name on them.
+                    if !pullRequest.isAuthored(by: board.queue.viewer) {
+                        Text("· \(pullRequest.author.login.rawValue)").lineLimit(1)
                     }
-                    if let absenceText = absence?.dashboardText { Tag(text: absenceText, colour: .purple) }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                LineDeltaView(lineDelta: pullRequest.lineDelta).font(.caption)
+                // Pills sit right of the line counts, or drop to their own line when the column is too narrow.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        LineDeltaView(lineDelta: pullRequest.lineDelta).font(.caption)
+                        Spacer(minLength: 8)
+                        statusTags
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        LineDeltaView(lineDelta: pullRequest.lineDelta).font(.caption)
+                        statusTags
+                    }
+                }
             }
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(10)
         .opacity(isHighlighted ? 1 : 0.45)
@@ -256,17 +281,18 @@ private struct PullRequestRow: View {
     }
 }
 
-private struct Tag: View {
-    let text: String
-    let colour: Color
+private struct PillView: View {
+    let pill: StatusPill
 
     var body: some View {
-        Text(text)
+        Text(pill.text)
             .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 5)
-            .padding(.vertical, 1)
-            .background(Capsule().fill(colour.opacity(0.15)))
-            .foregroundStyle(colour)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(pill.colour.opacity(0.15)))
+            .foregroundStyle(pill.colour)
     }
 }
 
@@ -304,15 +330,36 @@ extension Lane {
     }
 }
 
+/// A coloured status pill. Colour carries the meaning: green is good to go, red needs fixing,
+/// orange needs a nudge, blue is informational, grey is parked.
+struct StatusPill: Hashable {
+    enum Tone: Hashable { case good, problem, nudge, info, parked }
+
+    let text: String
+    let tone: Tone
+
+    static let draft = StatusPill(text: "Draft", tone: .parked)
+
+    var colour: Color {
+        switch tone {
+        case .good: .green
+        case .problem: .red
+        case .nudge: .orange
+        case .info: .blue
+        case .parked: .gray
+        }
+    }
+}
+
 extension QueuePlacement {
-    var reason: String? {
+    var pill: StatusPill? {
         switch self {
-        case .needsMyReview(.team): "Team"
+        case .needsMyReview(.team): StatusPill(text: "Team", tone: .info)
         case .needsMyReview(.direct): nil
-        case .needsMyAction(.addressChangesRequested): "Changes requested"
-        case .needsMyAction(.merge): "Approved"
-        case .needsMyAction(.finishDraft): "Finish draft"
-        case .needsMyAction(.requestReviewers): "Request reviewers"
+        case .needsMyAction(.addressChangesRequested): StatusPill(text: "Changes requested", tone: .problem)
+        case .needsMyAction(.merge): StatusPill(text: "Approved", tone: .good)
+        case .needsMyAction(.finishDraft): StatusPill(text: "Finish draft", tone: .parked)
+        case .needsMyAction(.requestReviewers): StatusPill(text: "Request reviewers", tone: .nudge)
         case .waitingOnOthers: nil
         }
     }
@@ -320,12 +367,13 @@ extension QueuePlacement {
 
 extension PetAbsence {
     /// nil for absences that need no explanation.
-    var dashboardText: String? {
+    var pill: StatusPill? {
         switch self {
         case .laneWithoutPets: nil
-        case .suppressed(.muted): "Muted"
-        case .suppressed(.dismissed): "Dismissed"
-        case .approvedByOthers(let approvers): "Approved by \(approvers.map(\.rawValue).joined(separator: ", "))"
+        case .suppressed(.muted): StatusPill(text: "Muted", tone: .parked)
+        case .suppressed(.dismissed): StatusPill(text: "Dismissed", tone: .parked)
+        case .approvedByOthers(let approvers):
+            StatusPill(text: "Approved by \(approvers.map(\.rawValue).joined(separator: ", "))", tone: .good)
         }
     }
 }
