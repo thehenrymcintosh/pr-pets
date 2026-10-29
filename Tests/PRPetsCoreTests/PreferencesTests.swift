@@ -11,6 +11,7 @@ struct PreferencesTests {
         #expect(preferences.labelStyle == .repository)
         #expect(preferences.petLanes == [.needsMyReview])
         #expect(preferences.checkForUpdatesAutomatically)
+        #expect(preferences.hideDuringFullScreen)
     }
 
     @Test func unreadableValuesFallBackInsteadOfFailing() throws {

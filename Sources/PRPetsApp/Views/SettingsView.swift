@@ -139,6 +139,7 @@ private struct PlacementSettings: View {
                     }
                 }
             }
+            Toggle("Hide while an app is full screen or presenting", isOn: setting(model, \.hideDuringFullScreen))
             Text("Drag the doghouse to move everything. Pets walk along the ground line at its base.")
                 .font(.caption).foregroundStyle(.secondary)
             Button("Reset position") { model.updatePreferences { $0.placement = .default } }

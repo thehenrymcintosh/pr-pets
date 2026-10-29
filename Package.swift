@@ -17,13 +17,15 @@ let package = Package(
         .target(name: "PRPetsRender", dependencies: ["PRPetsCore", "PRPetsArt"]),
         // PullRequestSource backed by the local `gh` CLI.
         .target(name: "PRPetsGitHub", dependencies: ["PRPetsCore"]),
+        // Facts about the desktop the overlay lives on, such as whether an app is full screen.
+        .target(name: "PRPetsDesktop"),
         // Checks GitHub Releases for a newer version and installs it in place.
         .target(name: "PRPetsUpdates"),
         // Scripted PullRequestSource used by demo mode, the preview tool and tests.
         .target(name: "PRPetsDemo", dependencies: ["PRPetsCore"]),
         .executableTarget(
             name: "PRPetsApp",
-            dependencies: ["PRPetsCore", "PRPetsArt", "PRPetsRender", "PRPetsGitHub", "PRPetsDemo", "PRPetsUpdates"]
+            dependencies: ["PRPetsCore", "PRPetsArt", "PRPetsRender", "PRPetsGitHub", "PRPetsDemo", "PRPetsUpdates", "PRPetsDesktop"]
         ),
         .executableTarget(
             name: "pr-pets-preview",
@@ -31,6 +33,7 @@ let package = Package(
         ),
         .testTarget(name: "PRPetsCoreTests", dependencies: ["PRPetsCore", "PRPetsDemo"]),
         .testTarget(name: "PRPetsArtTests", dependencies: ["PRPetsCore", "PRPetsArt"]),
+        .testTarget(name: "PRPetsDesktopTests", dependencies: ["PRPetsDesktop"]),
         .testTarget(name: "PRPetsUpdatesTests", dependencies: ["PRPetsUpdates"]),
         .testTarget(name: "PRPetsRenderTests", dependencies: ["PRPetsCore", "PRPetsRender", "PRPetsDemo"]),
         .testTarget(
