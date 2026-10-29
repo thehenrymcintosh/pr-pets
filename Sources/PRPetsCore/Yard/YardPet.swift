@@ -12,6 +12,8 @@ public enum PetActivity: Hashable, Sendable {
     case napping(until: Double)
     /// Sitting still and looking at the user, who is hovering or has its card open.
     case attending
+    /// Jumps and freezes for a beat on being called home, so the user notices it leaving.
+    case startled(until: Double)
     /// Running back into the doghouse; the pet leaves the yard when it gets there.
     case returningHome
 
@@ -36,6 +38,14 @@ public enum PetActivity: Hashable, Sendable {
         }
     }
 
+    /// Startled or already running home: the pet is leaving.
+    public var isHeadingHome: Bool {
+        switch self {
+        case .startled, .returningHome: true
+        default: false
+        }
+    }
+
     public var isResting: Bool {
         switch self {
         case .idling, .sitting, .napping, .attending: true
@@ -51,6 +61,8 @@ public enum PetPose: String, CaseIterable, Hashable, Sendable {
     case run1, run2
     case sit, sitBlink
     case sleep1, sleep2
+    /// Mid-jump with surprise.
+    case startle
 }
 
 public struct YardPet: Identifiable, Hashable, Sendable {
@@ -65,15 +77,20 @@ public struct YardPet: Identifiable, Hashable, Sendable {
 
     public var genome: PetGenome { entry.genome }
 
-    /// Offsets this pet's blink and breathing so pets don't animate in lockstep.
-    private var animationPhase: Double {
-        Double(Seed(hashing: id.rawValue).rawValue % 1000) / 1000 * 10
+    /// 0..<1, fixed per pet. Offsets blinks, breathing and startles so pets don't move in lockstep.
+    var individuality: Double {
+        Double(Seed(hashing: id.rawValue).rawValue % 1000) / 1000
     }
+
+    private var animationPhase: Double { individuality * 10 }
 
     public func pose(at clock: Double) -> PetPose {
         let localTime = clock + animationPhase
         let isBlinking = localTime.truncatingRemainder(dividingBy: 3.7) < 0.15
         switch activity {
+        case .startled:
+            // A quick hop, then frozen wide-eyed until it bolts.
+            return clock - activityStartedAt < PetBehaviour.startleHopDuration ? .startle : .stand
         case .emerging, .zooming, .returningHome:
             return Int(odometer / 3).isMultiple(of: 2) ? .run1 : .run2
         case .walking:
@@ -97,6 +114,11 @@ public struct YardPet: Identifiable, Hashable, Sendable {
         default:
             return 1
         }
+    }
+
+    public var isStartled: Bool {
+        if case .startled = activity { return true }
+        return false
     }
 
     public var isAsleep: Bool {

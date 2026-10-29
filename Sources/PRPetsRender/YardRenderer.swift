@@ -36,6 +36,7 @@ public struct YardRenderer {
     private func drawLayer(_ placements: [PetPlacement], nameTags: [PullRequestID: NameTag], scene: YardScene, in context: CGContext) {
         placements.forEach { drawPet($0, in: context) }
         placements.forEach { drawSleepyZs(over: $0, scene: scene, in: context) }
+        placements.filter(\.pet.isStartled).forEach { drawExclamation(over: $0, scale: scene.viewport.scale, in: context) }
         for placement in placements {
             if let tag = nameTags[placement.pet.id] { draw(tag, opacity: placement.opacity, in: context) }
         }
@@ -110,6 +111,22 @@ public struct YardRenderer {
         fillRoundedRect(tag.frame, radius: tag.frame.height / 2, colour: Palette.labelBackground, in: context)
         tag.line.draw(at: tag.baseline, in: context)
         context.restoreGState()
+    }
+
+    /// A pixel-art "!" just in front of a startled pet's face, below its name tag: a three-pixel bar and a dot,
+    /// outlined so it reads on any wallpaper.
+    private func drawExclamation(over placement: PetPlacement, scale: CGFloat, in context: CGContext) {
+        let pixel = scale
+        let body = placement.bodyRect
+        let x = placement.pet.facing == .right ? body.maxX + pixel * 2 : body.minX - pixel * 3
+        let origin = CGPoint(x: x, y: body.minY + pixel)
+        let marks = [CGRect(x: 0, y: 0, width: 1, height: 3), CGRect(x: 0, y: 4, width: 1, height: 1)].map { mark in
+            CGRect(x: origin.x + mark.minX * pixel, y: origin.y + mark.minY * pixel, width: mark.width * pixel, height: mark.height * pixel)
+        }
+        context.setFillColor(Palette.exclamationOutline)
+        marks.forEach { context.fill($0.insetBy(dx: -pixel, dy: -pixel)) }
+        context.setFillColor(Palette.exclamation)
+        marks.forEach { context.fill($0) }
     }
 
     private func drawSleepyZs(over placement: PetPlacement, scene: YardScene, in context: CGContext) {
@@ -199,6 +216,8 @@ public struct YardRenderer {
 enum Palette {
     static let labelBackground = CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.88)
     static let labelText = CGColor(srgbRed: 0.16, green: 0.12, blue: 0.2, alpha: 1)
+    static let exclamation = CGColor(srgbRed: 1, green: 0.84, blue: 0.2, alpha: 1)
+    static let exclamationOutline = CGColor(srgbRed: 0.16, green: 0.06, blue: 0.1, alpha: 1)
     static let sleepyZ = CGColor(srgbRed: 0.45, green: 0.55, blue: 0.85, alpha: 1)
     static let countBadge = CGColor(srgbRed: 0.18, green: 0.49, blue: 0.88, alpha: 1)
     static let problemBadge = CGColor(srgbRed: 0.96, green: 0.68, blue: 0.13, alpha: 1)

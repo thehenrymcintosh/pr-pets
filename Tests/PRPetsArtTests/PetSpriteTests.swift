@@ -29,7 +29,7 @@ struct PetSpriteTests {
 
     @Test func petsStandOnTheGround() {
         // Every grounded pose's lowest pixel is the outline under the feet, so pets don't float or sink.
-        let airbornePoses: Set<PetPose> = [.run2]
+        let airbornePoses: Set<PetPose> = [.run2, .startle]
         everyFrame { genome, pose, image in
             guard !airbornePoses.contains(pose), let bounds = image.opaqueBounds else { return }
             #expect(bounds.maxY == PetSpriteSheet.frameHeight - 1, "\(genome.species) \(pose) bottom row is \(bounds.maxY)")

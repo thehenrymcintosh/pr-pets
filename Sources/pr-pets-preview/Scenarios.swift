@@ -34,6 +34,7 @@ struct Scenario {
         ], warmUp: 8),
         Scenario(name: "hover", steps: [.demoTime(70), .run(seconds: 1), .hover(number: 213), .run(seconds: 3)], warmUp: 10),
         Scenario(name: "screen-width", steps: [.demoTime(70), .run(seconds: 16)], warmUp: 3, roamingArea: .screenWidth),
+        Scenario(name: "startle", steps: [.demoTime(70), .run(seconds: 0.2), .setPetsInside(true), .run(seconds: 1.3)], warmUp: 8),
         Scenario(name: "own-prs", steps: [.demoTime(0), .run(seconds: 10)], warmUp: 8, petLanes: Set(Lane.allCases)),
     ]
 }

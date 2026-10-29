@@ -30,7 +30,7 @@ public struct Yard: Sendable {
 
     // MARK: - Commands
 
-    /// Moves the yard towards the roster: newcomers queue up at the door, missing pets run home,
+    /// Moves the yard towards the roster: newcomers queue up at the door, missing pets startle and run home,
     /// pets that were heading home but are wanted again turn around.
     public mutating func reconcile(with roster: PetRoster) {
         let wantedByID = Dictionary(uniqueKeysWithValues: roster.entries.map { ($0.id, $0) })
@@ -49,7 +49,7 @@ public struct Yard: Sendable {
     public mutating func hold(_ id: PullRequestID) {
         heldPetIDs.insert(id)
         pets = pets.map { pet in
-            guard pet.id == id, pet.activity != .returningHome else { return pet }
+            guard pet.id == id, !pet.activity.isHeadingHome else { return pet }
             return starting(.attending, for: pet)
         }
     }
@@ -109,6 +109,9 @@ public struct Yard: Sendable {
 
     /// Returns nil when the pet has made it back inside.
     private func step(_ pet: YardPet, by seconds: Double, using random: inout some RandomNumberGenerator) -> YardPet? {
+        if case .startled(let until) = pet.activity {
+            return clock >= until ? starting(.returningHome, for: pet) : pet
+        }
         if pet.activity == .returningHome {
             let walked = moving(pet, towards: geometry.door, by: seconds)
             return walked.position == geometry.door ? nil : walked
@@ -148,13 +151,13 @@ public struct Yard: Sendable {
     }
 
     private func sendingHome(_ pet: YardPet) -> YardPet {
-        pet.activity == .returningHome ? pet : starting(.returningHome, for: pet)
+        pet.activity.isHeadingHome ? pet : starting(.startled(until: clock + PetBehaviour.startleDuration(for: pet)), for: pet)
     }
 
     private func updating(_ pet: YardPet, to entry: PetRosterEntry) -> YardPet {
         var updated = pet
         updated.entry = entry
-        guard pet.activity == .returningHome else { return updated }
+        guard pet.activity.isHeadingHome else { return updated }
         return starting(.idling(until: clock + 0.5), for: updated)
     }
 
