@@ -98,9 +98,9 @@ Every pet is generated from a seed that's saved for its PR, so it keeps its look
 - an occasional bow, bandana or flower
 - temperament, which sets how energetic, sleepy and curious it is
 
-<p align="center"><img src="docs/images/poses.png" alt="Eight pets each shown in all twelve poses"></p>
+<p align="center"><img src="docs/images/poses.png" alt="Eight pets each shown in all thirteen poses"></p>
 
-Each pet has twelve frames: stand, blink, four walking, two running, sit, sit-and-blink, and two sleeping. The walk cycle follows the distance a pet has actually travelled, so its feet never slide.
+Each pet has thirteen frames: stand, blink, four walking, two running, sit, sit-and-blink, two sleeping, and a startled hop for when it's called home. The walk cycle follows the distance a pet has actually travelled, so its feet never slide.
 
 | Cats | Dogs |
 | --- | --- |
