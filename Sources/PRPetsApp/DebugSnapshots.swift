@@ -6,7 +6,7 @@ import SwiftUI
 /// (no Screen Recording permission needed).
 @MainActor
 enum DebugSnapshots {
-    static func scheduleIfRequested(model: AppModel, overlay: NSView, openWindows: @escaping () -> [NSWindow]) {
+    static func scheduleIfRequested(model: AppModel, updates: UpdateController, overlay: NSView, openWindows: @escaping () -> [NSWindow]) {
         guard let path = ProcessInfo.processInfo.environment["PR_PETS_DEBUG_SNAPSHOTS"] else { return }
         let directory = URL(fileURLWithPath: path, isDirectory: true)
         DispatchQueue.main.asyncAfter(deadline: .now() + 9) {
@@ -25,6 +25,17 @@ enum DebugSnapshots {
                     ).background(Color(nsColor: .windowBackgroundColor)))
                     card.frame = CGRect(origin: .zero, size: card.fittingSize)
                     try write(card, to: directory.appending(path: "pet-card.png"))
+                }
+                let tabs: [(String, AnyView)] = [
+                    ("github", AnyView(GitHubSettings(model: model))),
+                    ("pets", AnyView(PetSettings(model: model))),
+                    ("placement", AnyView(PlacementSettings(model: model))),
+                    ("system", AnyView(SystemSettings(model: model, updates: updates))),
+                ]
+                for (name, tab) in tabs {
+                    let view = NSHostingView(rootView: Form { tab }.formStyle(.grouped).frame(width: 520, height: 460))
+                    view.frame = CGRect(x: 0, y: 0, width: 520, height: 460)
+                    try write(view, to: directory.appending(path: "settings-\(name).png"))
                 }
                 print("Wrote debug snapshots to \(directory.path)")
             } catch {

@@ -21,7 +21,7 @@ brew install gh
 gh auth login
 ```
 
-**Updating:** PR Pets checks for new releases once a day. When there's one, **Update to vX.Y.Z** appears in its menus and in Settings; it downloads, verifies the checksum, swaps itself in and restarts. Re-running the install command does the same thing.
+**Updating:** PR Pets checks for new releases once a day. When there's one, **Update to vX.Y.Z** appears in its menus and in Settings; it downloads, verifies the checksum, swaps itself in and restarts. Re-running the install command does the same thing. You'll find it all under **Settings → System**, along with Quit.
 
 Want to look before you have a review waiting? Open **Settings → GitHub → Pull requests from → Demo data**.
 
@@ -116,7 +116,8 @@ Open Settings from the doghouse's right-click menu, the menu bar paw, or the das
 | --- | --- |
 | **GitHub** | How often to check (default every 3 minutes), `gh` path, GitHub Enterprise host, whether team review requests count, only-these-orgs, ignored repositories, whether to fetch whole stacks |
 | **Pets** | Which columns get pets (just reviews by default; also your own PRs that need action or are in review), send inside, go home once someone else approves, hover cards, maximum pets, name tag (username, name, repo or none), which species can appear |
-| **Placement** | Scale, roam near the doghouse (and how far) or across the whole screen, hide while an app is full screen or presenting (on by default), reset position, menu bar icon, launch at login, automatic update checks |
+| **Placement** | Scale, roam near the doghouse (and how far) or across the whole screen, hide while an app is full screen or presenting (on by default), reset position |
+| **System** | Menu bar icon, launch at login, automatic update checks, the current version with a Check for Updates button, and Quit |
 
 Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
 
@@ -133,7 +134,7 @@ Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
 You need macOS 14+ and either Xcode or just the Command Line Tools (`xcode-select --install`).
 
 ```sh
-make test         # 80 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
+make test         # 91 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
 make demo         # run the app against scripted demo PRs
 make preview      # render sprite sheets and scenario GIFs to ./previews
 make screenshots  # run the real app on demo data and save its windows to ./previews/app

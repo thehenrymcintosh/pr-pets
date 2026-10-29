@@ -31,7 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             showDashboard()
             showSettings()
         }
-        DebugSnapshots.scheduleIfRequested(model: model, overlay: overlay.view) { [weak self] in
+        DebugSnapshots.scheduleIfRequested(model: model, updates: updates, overlay: overlay.view) { [weak self] in
             [self?.dashboardWindow, self?.settingsWindow].compactMap { $0 }
         }
         NSWorkspace.shared.notificationCenter.addObserver(
