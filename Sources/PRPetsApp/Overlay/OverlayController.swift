@@ -25,6 +25,7 @@ final class OverlayController: NSObject {
     private var lastFrameTimestamp: CFTimeInterval?
     private var mouseTracker: Timer?
     private var subscriptions: Set<AnyCancellable> = []
+    private let fullScreenMonitor = FullScreenMonitor()
 
     init(model: AppModel, updates: UpdateController, actions: AppActions) {
         self.model = model
@@ -43,7 +44,8 @@ final class OverlayController: NSObject {
         yardView.delegate = self
         panel.contentView = yardView
         applyLayout()
-        panel.orderFrontRegardless()
+        fullScreenMonitor.onChange = { [weak self] _ in self?.updateVisibility() }
+        updateVisibility()
         startAnimating()
         startTrackingMouse()
         model.objectWillChange
@@ -72,6 +74,7 @@ final class OverlayController: NSObject {
         yard.reconcile(with: roster)
         yardView.sprites.retainOnly(Set(yard.pets.map(\.genome) + roster.entries.map(\.genome)))
         displayLink?.isPaused = false
+        updateVisibility()
         redraw()
     }
 
@@ -89,6 +92,19 @@ final class OverlayController: NSObject {
         panel.setFrame(layout.panelFrame, display: true)
         yardView.frame = CGRect(origin: .zero, size: layout.panelFrame.size)
         yard.relocate(to: viewport.geometry)
+        fullScreenMonitor.start(watching: layout.screen)
+    }
+
+    /// Steps out of the way while an app is full screen or presenting on this display. The pets carry on
+    /// inside the hidden overlay, so they're where you left them when it comes back.
+    private func updateVisibility() {
+        let shouldHide = model.effectivePreferences.hideDuringFullScreen && fullScreenMonitor.isFullScreen
+        if shouldHide {
+            closeCard()
+            panel.orderOut(nil)
+        } else if !panel.isVisible {
+            panel.orderFrontRegardless()
+        }
     }
 
     // MARK: - Animation
