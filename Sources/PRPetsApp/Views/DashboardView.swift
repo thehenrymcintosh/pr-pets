@@ -215,13 +215,17 @@ private struct PullRequestRow: View {
         hasPet ? board.presence.absence(of: pullRequest) : nil
     }
 
+    private var statusPills: [StatusPill] {
+        let placement = isHighlighted ? board.queue.placement(of: pullRequest) : nil
+        let placementPill = placement?.pill
+        // An own draft already says "Finish draft"; anyone else's draft gets a plain marker.
+        let draftPill: StatusPill? = pullRequest.isDraft && placement != .needsMyAction(.finishDraft) ? .draft : nil
+        return [draftPill, placementPill, absence?.pill].compactMap { $0 }
+    }
+
     private var statusTags: some View {
         HStack(spacing: 4) {
-            if pullRequest.isDraft { Tag(text: "Draft", colour: .gray) }
-            if let reason = board.queue.placement(of: pullRequest)?.reason, isHighlighted {
-                Tag(text: reason, colour: .orange)
-            }
-            if let absenceText = absence?.dashboardText { Tag(text: absenceText, colour: .purple) }
+            ForEach(statusPills, id: \.self, content: PillView.init)
         }
     }
 
@@ -277,19 +281,18 @@ private struct PullRequestRow: View {
     }
 }
 
-private struct Tag: View {
-    let text: String
-    let colour: Color
+private struct PillView: View {
+    let pill: StatusPill
 
     var body: some View {
-        Text(text)
+        Text(pill.text)
             .font(.caption2.weight(.semibold))
             .lineLimit(1)
             .fixedSize()
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
-            .background(Capsule().fill(colour.opacity(0.15)))
-            .foregroundStyle(colour)
+            .background(Capsule().fill(pill.colour.opacity(0.15)))
+            .foregroundStyle(pill.colour)
     }
 }
 
@@ -327,15 +330,36 @@ extension Lane {
     }
 }
 
+/// A coloured status pill. Colour carries the meaning: green is good to go, red needs fixing,
+/// orange needs a nudge, blue is informational, grey is parked.
+struct StatusPill: Hashable {
+    enum Tone: Hashable { case good, problem, nudge, info, parked }
+
+    let text: String
+    let tone: Tone
+
+    static let draft = StatusPill(text: "Draft", tone: .parked)
+
+    var colour: Color {
+        switch tone {
+        case .good: .green
+        case .problem: .red
+        case .nudge: .orange
+        case .info: .blue
+        case .parked: .gray
+        }
+    }
+}
+
 extension QueuePlacement {
-    var reason: String? {
+    var pill: StatusPill? {
         switch self {
-        case .needsMyReview(.team): "Team"
+        case .needsMyReview(.team): StatusPill(text: "Team", tone: .info)
         case .needsMyReview(.direct): nil
-        case .needsMyAction(.addressChangesRequested): "Changes requested"
-        case .needsMyAction(.merge): "Approved"
-        case .needsMyAction(.finishDraft): "Finish draft"
-        case .needsMyAction(.requestReviewers): "Request reviewers"
+        case .needsMyAction(.addressChangesRequested): StatusPill(text: "Changes requested", tone: .problem)
+        case .needsMyAction(.merge): StatusPill(text: "Approved", tone: .good)
+        case .needsMyAction(.finishDraft): StatusPill(text: "Finish draft", tone: .parked)
+        case .needsMyAction(.requestReviewers): StatusPill(text: "Request reviewers", tone: .nudge)
         case .waitingOnOthers: nil
         }
     }
@@ -343,12 +367,13 @@ extension QueuePlacement {
 
 extension PetAbsence {
     /// nil for absences that need no explanation.
-    var dashboardText: String? {
+    var pill: StatusPill? {
         switch self {
         case .laneWithoutPets: nil
-        case .suppressed(.muted): "Muted"
-        case .suppressed(.dismissed): "Dismissed"
-        case .approvedByOthers(let approvers): "Approved by \(approvers.map(\.rawValue).joined(separator: ", "))"
+        case .suppressed(.muted): StatusPill(text: "Muted", tone: .parked)
+        case .suppressed(.dismissed): StatusPill(text: "Dismissed", tone: .parked)
+        case .approvedByOthers(let approvers):
+            StatusPill(text: "Approved by \(approvers.map(\.rawValue).joined(separator: ", "))", tone: .good)
         }
     }
 }
