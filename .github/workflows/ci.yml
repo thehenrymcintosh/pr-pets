@@ -9,7 +9,7 @@ jobs:
   test:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Test
         run: make test
       - name: Build app bundle
@@ -17,7 +17,7 @@ jobs:
       - name: Render previews
         run: .build/release/pr-pets-preview all previews
       - name: Upload previews
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: previews
           path: previews
