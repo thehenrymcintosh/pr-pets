@@ -224,7 +224,12 @@ private struct PullRequestRow: View {
                     .lineLimit(2)
                 HStack(spacing: 6) {
                     Text(pullRequest.shortReference)
-                    Text(pullRequest.author.login.rawValue)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    // Your own PRs don't need your name on them.
+                    if !pullRequest.isAuthored(by: board.queue.viewer) {
+                        Text(pullRequest.author.login.rawValue).lineLimit(1)
+                    }
                     if pullRequest.isDraft { Tag(text: "Draft", colour: .gray) }
                     if let reason = board.queue.placement(of: pullRequest)?.reason, isHighlighted {
                         Tag(text: reason, colour: .orange)
@@ -263,6 +268,8 @@ private struct Tag: View {
     var body: some View {
         Text(text)
             .font(.caption2.weight(.semibold))
+            .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
             .background(Capsule().fill(colour.opacity(0.15)))
