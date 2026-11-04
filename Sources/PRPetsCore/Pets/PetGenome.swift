@@ -40,6 +40,11 @@ public enum EyeColour: String, CaseIterable, Hashable, Codable, Sendable {
     case dark, green, amber, blue
 }
 
+/// The colour of the collar a pet wears when its PR is part of a stack. Pets in a stack share a genome, so they share it.
+public enum CollarColour: String, CaseIterable, Hashable, Codable, Sendable {
+    case red, orange, lime, green, teal, sky, blue, indigo, purple, magenta, pink, white
+}
+
 public enum Accessory: String, CaseIterable, Hashable, Codable, Sendable {
     case bow, bandana, flower
 }
@@ -73,6 +78,7 @@ public struct PetGenome: Hashable, Codable, Sendable {
     public let build: BodyBuild
     public let eyes: EyeColour
     public let accessory: Accessory?
+    public let collar: CollarColour
     public let temperament: Temperament
 
     public init(
@@ -86,6 +92,7 @@ public struct PetGenome: Hashable, Codable, Sendable {
         build: BodyBuild,
         eyes: EyeColour,
         accessory: Accessory?,
+        collar: CollarColour,
         temperament: Temperament
     ) {
         self.species = species
@@ -98,6 +105,17 @@ public struct PetGenome: Hashable, Codable, Sendable {
         self.build = build
         self.eyes = eyes
         self.accessory = accessory
+        self.collar = collar
         self.temperament = temperament
+    }
+}
+
+extension PetGenome {
+    /// The same pet in a different collar.
+    public func wearing(_ collar: CollarColour) -> PetGenome {
+        PetGenome(
+            species: species, coat: coat, secondaryCoat: secondaryCoat, pattern: pattern, coatTint: coatTint,
+            ears: ears, tail: tail, build: build, eyes: eyes, accessory: accessory, collar: collar, temperament: temperament
+        )
     }
 }

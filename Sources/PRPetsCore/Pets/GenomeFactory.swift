@@ -8,6 +8,8 @@ public enum GenomeFactory {
         let species = speciesPool[Int(random.next() % UInt64(speciesPool.count))]
         let traits = SpeciesCatalogue.traits(for: species)
 
+        // The collar rolls from its own seed so it never shifts the draws for the rest of the pet.
+        var collarRandom = SeededRandom(seed: seed.derived("collar"))
         let coat = random.weightedPick(traits.coats)
         let secondaryCoat = random.weightedPick(traits.secondaryCoats.filter { $0.0 != coat })
         return PetGenome(
@@ -21,6 +23,7 @@ public enum GenomeFactory {
             build: random.weightedPick([(.slim, 1), (.regular, 2), (.chonky, 1)]),
             eyes: random.weightedPick(traits.eyes),
             accessory: random.chance(0.2) ? random.weightedPick(Accessory.allCases.map { ($0, 1) }) : nil,
+            collar: collarRandom.weightedPick(CollarColour.allCases.map { ($0, 1) }),
             temperament: Temperament(
                 energy: Double.random(in: 0...1, using: &random),
                 sleepiness: Double.random(in: 0...1, using: &random),

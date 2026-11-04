@@ -41,7 +41,7 @@ enum AppIcon {
         canvas.drawPixels(DoghouseArt.image, at: doghouseOrigin, scale: scale)
         let cat = PetSpriteComposer.spriteSheet(for: PetGenome(
             species: .cat, coat: .ginger, secondaryCoat: .white, pattern: .tabby, coatTint: 0,
-            ears: .pointy, tail: .long, build: .regular, eyes: .green, accessory: nil,
+            ears: .pointy, tail: .long, build: .regular, eyes: .green, accessory: nil, collar: .blue,
             temperament: Temperament(energy: 0.5, sleepiness: 0.5, curiosity: 0.5)
         )).frame(for: .sit)
         let catOrigin = CGPoint(x: doghouseOrigin.x + CGFloat(DoghouseArt.width - 6) * scale, y: groundY - CGFloat(PetSpriteSheet.frameHeight) * scale)

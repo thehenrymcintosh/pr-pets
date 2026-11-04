@@ -178,11 +178,19 @@ struct GenomeTests {
         #expect(species == [.cat, .bunny])
     }
 
+    @Test func theCollarDoesNotShiftTheRestOfThePet() {
+        let genome = GenomeFactory.genome(for: Seed(hashing: "collar-independence"))
+        let others = CollarColour.allCases.map { genome.wearing($0) }
+        #expect(others.allSatisfy { $0.temperament == genome.temperament && $0.coat == genome.coat })
+        #expect(genome.collar == GenomeFactory.genome(for: Seed(hashing: "collar-independence")).collar)
+    }
+
     @Test func producesAGoodSpread() {
         let genomes = (0..<300).map { GenomeFactory.genome(for: Seed(hashing: "spread-\($0)")) }
         #expect(Set(genomes.map(\.species)) == Set(Species.allCases))
         #expect(Set(genomes.map(\.coat)).count >= 8)
         #expect(Set(genomes.map(\.pattern)) == Set(CoatPattern.allCases))
+        #expect(Set(genomes.map(\.collar)) == Set(CollarColour.allCases), "every collar colour should turn up")
         #expect(Set(genomes).count == genomes.count, "no two of 300 pets should be identical")
     }
 }

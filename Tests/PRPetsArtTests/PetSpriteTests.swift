@@ -1,4 +1,4 @@
-import PRPetsArt
+@testable import PRPetsArt
 import PRPetsCore
 import Testing
 
@@ -46,6 +46,36 @@ struct PetSpriteTests {
         let plain = PetSpriteComposer.spriteSheet(for: genome).frame(for: .stand)
         let collared = PetSpriteComposer.spriteSheet(for: genome, adornment: PetAdornment(wearsStackCollar: true)).frame(for: .stand)
         #expect(plain != collared)
+    }
+
+    @Test func theCollarColourShowsInTheSprite() {
+        let genome = sampleGenomes[3]
+        let adornment = PetAdornment(wearsStackCollar: true)
+        let frames = CollarColour.allCases.map { collar in
+            PetSpriteComposer.spriteSheet(for: genome.wearing(collar), adornment: adornment).frame(for: .stand)
+        }
+        // Colours too close to this pet's fur fall back to another, so count the colours it actually wears.
+        let wornColours = Set(CollarColour.allCases.map { CoatPalette(genome: genome.wearing($0)).collar })
+        #expect(wornColours.count > CollarColour.allCases.count / 2)
+        #expect(Set(frames).count == wornColours.count, "each collar colour should paint differently")
+        let uncollared = CollarColour.allCases.map { PetSpriteComposer.spriteSheet(for: genome.wearing($0)).frame(for: .stand) }
+        #expect(Set(uncollared).count == 1, "the collar colour only matters when the pet wears one")
+    }
+
+    @Test func collarsStandOutFromTheFurTheySitOn() {
+        let whiteCat = PetGenome(
+            species: .cat, coat: .white, secondaryCoat: .cream, pattern: .solid, coatTint: 0, ears: .pointy, tail: .long,
+            build: .regular, eyes: .blue, accessory: nil, collar: .white, temperament: Temperament(energy: 0, sleepiness: 0, curiosity: 0)
+        )
+        let gingerCat = PetGenome(
+            species: .cat, coat: .ginger, secondaryCoat: .white, pattern: .tuxedo, coatTint: 0, ears: .pointy, tail: .long,
+            build: .regular, eyes: .green, accessory: nil, collar: .orange, temperament: Temperament(energy: 0, sleepiness: 0, curiosity: 0)
+        )
+        for genome in [whiteCat, gingerCat] {
+            let palette = CoatPalette(genome: genome)
+            #expect(palette.collar.distance(to: palette.coat) >= 90)
+            #expect(palette.collar.distance(to: palette.secondary) >= 90)
+        }
     }
 
     @Test func differentGenomesLookDifferent() {

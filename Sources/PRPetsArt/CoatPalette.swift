@@ -37,7 +37,7 @@ struct CoatPalette: Sendable {
         blush = RGBA(hex: 0xf7a6b0)
         accessory = Self.accessoryColour(genome.accessory)
         accessoryShade = Self.shade(of: accessory)
-        collar = RGBA(hex: 0x2f7de1)
+        collar = Self.collarColour(genome.collar, standingOutFrom: [coat, secondary])
         tag = RGBA(hex: 0xf5c542)
     }
 
@@ -78,6 +78,31 @@ struct CoatPalette: Sendable {
         }
     }
 
+    /// The genome's collar, or the next colour along if it would blend into the fur it sits on.
+    private static func collarColour(_ collar: CollarColour, standingOutFrom fur: [RGBA]) -> RGBA {
+        let colours = CollarColour.allCases
+        let start = colours.firstIndex(of: collar)!
+        let candidates = (0..<colours.count).map { colours[(start + $0) % colours.count] }.map(collarColour)
+        return candidates.first { candidate in fur.allSatisfy { candidate.distance(to: $0) >= 90 } } ?? candidates[0]
+    }
+
+    private static func collarColour(_ collar: CollarColour) -> RGBA {
+        switch collar {
+        case .red: RGBA(hex: 0xe23d3d)
+        case .orange: RGBA(hex: 0xf28a1c)
+        case .lime: RGBA(hex: 0x9acd32)
+        case .green: RGBA(hex: 0x2fa84f)
+        case .teal: RGBA(hex: 0x1fa5a0)
+        case .sky: RGBA(hex: 0x4fc3f7)
+        case .blue: RGBA(hex: 0x2f7de1)
+        case .indigo: RGBA(hex: 0x4b45c4)
+        case .purple: RGBA(hex: 0x8e4fd1)
+        case .magenta: RGBA(hex: 0xd6379b)
+        case .pink: RGBA(hex: 0xff8fb8)
+        case .white: RGBA(hex: 0xfafafa)
+        }
+    }
+
     private static func accessoryColour(_ accessory: Accessory?) -> RGBA {
         switch accessory {
         case .bow: RGBA(hex: 0xe84a6f)
@@ -89,6 +114,15 @@ struct CoatPalette: Sendable {
 }
 
 extension RGBA {
+    /// Straight-line distance in RGB, 0...441.
+    func distance(to other: RGBA) -> Double {
+        let channels = [(red, other.red), (green, other.green), (blue, other.blue)]
+        return channels.reduce(0.0) { total, pair in
+            let difference = Double(pair.0) - Double(pair.1)
+            return total + difference * difference
+        }.squareRoot()
+    }
+
     var luminance: Double {
         0.299 * Double(red) + 0.587 * Double(green) + 0.114 * Double(blue)
     }

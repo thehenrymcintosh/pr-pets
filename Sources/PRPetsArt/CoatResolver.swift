@@ -11,8 +11,9 @@ struct CoatResolver {
         self.genome = genome
         self.palette = palette
         self.canvas = canvas
-        // String(describing:) of a value type is stable across runs, unlike Hasher.
-        self.patternSeed = Seed(hashing: String(describing: genome)).rawValue
+        // String(describing:) of a value type is stable across runs, unlike Hasher. The collar is left out
+        // (by fixing it) so spots and patches stay put whatever collar the pet wears.
+        self.patternSeed = Seed(hashing: String(describing: genome.wearing(.blue))).rawValue
     }
 
     func image() -> PixelImage {
