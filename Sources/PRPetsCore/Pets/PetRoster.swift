@@ -103,7 +103,9 @@ public struct PetPresence: Sendable {
 
     public func genome(for pullRequest: PullRequest) -> PetGenome {
         let seed = identities.seed(for: pullRequest) ?? Seed(hashing: pullRequest.id.rawValue)
-        return GenomeFactory.genome(for: seed, allowedSpecies: policy.allowedSpecies)
+        return GenomeFactory.genome(
+            for: seed, allowedSpecies: policy.allowedSpecies, build: PullRequestSize(pullRequest.lineDelta).build
+        )
     }
 
     public func stackPosition(of pullRequest: PullRequest) -> StackPosition? {

@@ -94,9 +94,24 @@ Every pet is generated from a seed that's saved for its PR, so it keeps its look
 
 - species, coat, secondary coat and eye colour
 - pattern: tabby, patches, socks, tuxedo, spots or points
-- ears, tail and build
+- ears and tail
 - an occasional bow, bandana or flower
 - temperament, which sets how energetic, sleepy and curious it is
+
+### Bigger PRs, chonkier pets
+
+A pet's build comes from its PR rather than its seed, so you can spot the big reviews from across the screen. The count is lines added plus lines removed:
+
+| Lines changed | Build |
+| --- | --- |
+| under 50 | slim |
+| 50 to 399 | regular |
+| 400 to 799 | chonky |
+| 800 or more | extra chonky, on stubby legs |
+
+If a push moves a PR into another band, its pet changes shape to match.
+
+<p align="center"><img src="docs/images/sizes.png" alt="Eight pets, each shown slim, regular, chonky and extra chonky while standing, walking, sitting and sleeping"></p>
 
 <p align="center"><img src="docs/images/poses.png" alt="Eight pets each shown in all thirteen poses"></p>
 

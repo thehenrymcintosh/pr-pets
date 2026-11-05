@@ -8,6 +8,7 @@ let outputDirectory = URL(fileURLWithPath: arguments.count > 1 ? arguments[argum
 func writeSheets() throws {
     try ImageWriter.writePNG(ContactSheet.render(seedCount: 60, pose: .stand, scale: 6), to: outputDirectory.appending(path: "pets.png"))
     try ImageWriter.writePNG(ContactSheet.renderPoses(seedCount: 8, scale: 6), to: outputDirectory.appending(path: "poses.png"))
+    try ImageWriter.writePNG(ContactSheet.renderSizes(seedCount: 8, scale: 6), to: outputDirectory.appending(path: "sizes.png"))
     for species in Species.allCases {
         let image = ContactSheet.render(seedCount: 20, pose: .stand, scale: 8, species: [species])
         try ImageWriter.writePNG(image, to: outputDirectory.appending(path: "species-\(species.rawValue).png"))
@@ -24,7 +25,7 @@ func writeScenario(_ scenario: Scenario) throws {
 
 do {
     switch command {
-    case "sheet", "species", "poses":
+    case "sheet", "species", "poses", "sizes":
         try writeSheets()
     case "scenario":
         let name = arguments.count > 2 ? arguments[1] : ""

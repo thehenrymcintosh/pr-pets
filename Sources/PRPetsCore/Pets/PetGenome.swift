@@ -34,6 +34,8 @@ public enum TailShape: String, CaseIterable, Hashable, Codable, Sendable {
 
 public enum BodyBuild: String, CaseIterable, Hashable, Codable, Sendable {
     case slim, regular, chonky
+    /// Only for the very biggest pull requests; never drawn at random.
+    case extraChonky
 }
 
 public enum EyeColour: String, CaseIterable, Hashable, Codable, Sendable {

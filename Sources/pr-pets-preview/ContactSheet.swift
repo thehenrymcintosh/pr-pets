@@ -37,4 +37,26 @@ enum ContactSheet {
         }
         return canvas.makeImage()
     }
+
+    /// The same pets at each pull request size, side by side, in a few poses.
+    static func renderSizes(seedCount: Int, scale: Int) -> CGImage {
+        let poses: [PetPose] = [.stand, .walk2, .sit, .sleep1]
+        let sizes = PullRequestSize.allCases
+        let cellWidth = (PetSpriteSheet.frameWidth + 2) * scale
+        let cellHeight = (PetSpriteSheet.frameHeight + 2) * scale
+        let groupGap = cellWidth / 3
+        let groupWidth = sizes.count * cellWidth + groupGap
+        let canvas = PreviewCanvas(width: poses.count * groupWidth, height: seedCount * cellHeight, background: 0xf4efe6)
+        for row in 0..<seedCount {
+            let seed = Seed(hashing: "sizes-\(row)")
+            let sheets = sizes.map { PetSpriteComposer.spriteSheet(for: GenomeFactory.genome(for: seed, build: $0.build)) }
+            for (group, pose) in poses.enumerated() {
+                for (column, sheet) in sheets.enumerated() {
+                    let origin = CGPoint(x: group * groupWidth + column * cellWidth + scale, y: row * cellHeight + scale)
+                    canvas.drawPixels(sheet.frame(for: pose), at: origin, scale: CGFloat(scale))
+                }
+            }
+        }
+        return canvas.makeImage()
+    }
 }

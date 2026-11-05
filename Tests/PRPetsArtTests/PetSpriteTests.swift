@@ -3,9 +3,11 @@ import PRPetsCore
 import Testing
 
 private let sampleGenomes = (0..<200).map { GenomeFactory.genome(for: Seed(hashing: "art-\($0)")) }
+// Seeds never pick the biggest build; only pull request size does, so cover it explicitly.
+private let extraChonkyGenomes = (0..<100).map { GenomeFactory.genome(for: Seed(hashing: "art-\($0)"), build: .extraChonky) }
 
 private func everyFrame(_ body: (PetGenome, PetPose, PixelImage) -> Void) {
-    for genome in sampleGenomes {
+    for genome in sampleGenomes + extraChonkyGenomes {
         for adornment in [PetAdornment.none, PetAdornment(wearsStackCollar: true)] {
             let sheet = PetSpriteComposer.spriteSheet(for: genome, adornment: adornment)
             for pose in PetPose.allCases { body(genome, pose, sheet.frame(for: pose)) }
