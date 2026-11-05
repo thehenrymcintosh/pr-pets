@@ -54,7 +54,7 @@ public struct YardRenderer {
 
     private func drawDoghouse(_ scene: YardScene, in context: CGContext) {
         let rect = scene.viewport.doghouseRect
-        drawUpright(sprites.doghouse, in: rect, context: context)
+        drawUpright(sprites.doghouse(painted: scene.doghouse.colour), in: rect, context: context)
         let someoneIsHome = scene.doghouse.petsAreInside && scene.doghouse.waitingCount > 0
         if someoneIsHome { drawPeekingEyes(in: rect, scale: scene.viewport.scale, context: context) }
     }

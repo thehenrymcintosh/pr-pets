@@ -20,9 +20,16 @@ public final class SpriteCache {
 
     private var frames: [Key: SpriteFrame] = [:]
     private var sheets: [PetGenome: [PetAdornment: PetSpriteSheet]] = [:]
-    public private(set) lazy var doghouse: CGImage = DoghouseArt.image.cgImage!
+    private var paintedDoghouse: (colour: DoghouseColour, image: CGImage)?
 
     public init() {}
+
+    public func doghouse(painted colour: DoghouseColour) -> CGImage {
+        if let paintedDoghouse, paintedDoghouse.colour == colour { return paintedDoghouse.image }
+        let image = DoghouseArt.image(painted: colour).cgImage!
+        paintedDoghouse = (colour, image)
+        return image
+    }
 
     public func frame(for genome: PetGenome, adornment: PetAdornment, pose: PetPose, facing: Facing) -> SpriteFrame {
         let key = Key(genome: genome, adornment: adornment, pose: pose, facing: facing)

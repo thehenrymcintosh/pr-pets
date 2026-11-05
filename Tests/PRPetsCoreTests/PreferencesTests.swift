@@ -77,3 +77,55 @@ struct RepositoryFilteringPreferencesTests {
         #expect(preferences.scale == 4)
     }
 }
+
+@Suite("Doghouse colour")
+struct DoghouseColourTests {
+    @Test func theDoghouseIsRedByDefault() {
+        #expect(Preferences.default.doghouseColour == DoghouseColour(style: .solid, primary: 0xd8333a))
+    }
+
+    @Test func aSolidDoghouseIsOneColourTopToBottom() {
+        let colour = DoghouseColour(style: .solid, primary: 0x336699)
+        #expect(colour.hex(atFraction: 0) == 0x336699)
+        #expect(colour.hex(atFraction: 1) == 0x336699)
+    }
+
+    @Test func anOmbreDoghouseFadesFromTheRoofToTheGround() {
+        let colour = DoghouseColour(style: .ombre, primary: 0xff0000, secondary: 0x0000ff)
+        #expect(colour.hex(atFraction: 0) == 0xff0000)
+        #expect(colour.hex(atFraction: 1) == 0x0000ff)
+        #expect(colour.hex(atFraction: 0.5) == 0x800080)
+    }
+
+    @Test func aRainbowDoghouseChangesColourAtEveryStageAndIgnoresThePicks() {
+        let rainbow = DoghouseColour(style: .rainbow, primary: 0x000000, secondary: 0x000000)
+        let stripes = (0...10).map { rainbow.hex(atFraction: Double($0) / 10) }
+        #expect(Set(stripes).count == stripes.count)
+        #expect(stripes.first != 0x000000)
+    }
+
+    @Test func fractionsOutsideTheDoghouseAreClamped() {
+        let colour = DoghouseColour(style: .ombre, primary: 0xff0000, secondary: 0x0000ff)
+        #expect(colour.hex(atFraction: -1) == 0xff0000)
+        #expect(colour.hex(atFraction: 2) == 0x0000ff)
+    }
+
+    @Test func theChoiceSurvivesSavingAndLoading() throws {
+        var preferences = Preferences()
+        preferences.doghouseColour = DoghouseColour(style: .ombre, primary: 0x112233, secondary: 0x445566)
+        let decoded = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences))
+        #expect(decoded.doghouseColour == preferences.doghouseColour)
+    }
+
+    @Test func anOldSettingsFileGetsTheRedDoghouse() throws {
+        let old = Data(#"{"scale": 4}"#.utf8)
+        #expect(try JSONDecoder().decode(Preferences.self, from: old).doghouseColour == .default)
+    }
+
+    @Test func anUnreadablePartFallsBackWithoutLosingTheRest() throws {
+        let odd = Data(#"{"doghouseColour": {"style": "plaid", "primary": 4660}}"#.utf8)
+        let colour = try JSONDecoder().decode(Preferences.self, from: odd).doghouseColour
+        #expect(colour.style == .solid)
+        #expect(colour.primary == 4660)
+    }
+}

@@ -38,3 +38,25 @@ enum ContactSheet {
         return canvas.makeImage()
     }
 }
+
+/// The doghouse in each colour style, side by side.
+enum DoghouseSheet {
+    static let colours = [
+        DoghouseColour.default,
+        DoghouseColour(style: .solid, primary: 0x2f6fd0),
+        DoghouseColour(style: .ombre, primary: 0xf2c33a, secondary: 0xd8333a),
+        DoghouseColour(style: .ombre, primary: 0x2255cc, secondary: 0x8be0ff),
+        DoghouseColour(style: .rainbow),
+    ]
+
+    static func render(scale: Int) -> CGImage {
+        let cellWidth = (DoghouseArt.width + 2) * scale
+        let cellHeight = (DoghouseArt.height + 2) * scale
+        let canvas = PreviewCanvas(width: colours.count * cellWidth, height: cellHeight, background: 0xf4efe6)
+        for (column, colour) in colours.enumerated() {
+            let origin = CGPoint(x: column * cellWidth + scale, y: scale)
+            canvas.drawPixels(DoghouseArt.image(painted: colour), at: origin, scale: CGFloat(scale))
+        }
+        return canvas.makeImage()
+    }
+}

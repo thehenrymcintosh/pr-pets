@@ -133,7 +133,8 @@ final class OverlayController: NSObject {
         let status = DoghouseStatus(
             waitingCount: board?.waitingPetCount ?? 0,
             petsAreInside: model.effectivePreferences.petsAreInside,
-            hasProblem: model.syncStatus.problem != nil
+            hasProblem: model.syncStatus.problem != nil,
+            colour: model.effectivePreferences.doghouseColour
         )
         yardView.scene = YardScene(viewport: viewport, yard: yard, doghouse: status, hoverCard: hoverCard())
     }

@@ -29,7 +29,7 @@ PR Pets is a Swift package. Most of it is plain Swift with no UI framework, so i
 | `PRPetsDemo` | Fixture builders and a scripted, looping `PullRequestSource` | Core |
 | `PRPetsUpdates` | Version comparison, the GitHub Releases feed, verified in-place install | Foundation, CryptoKit |
 | `PRPetsApp` | Windows, mouse, polling, persistence | all of the above |
-| `pr-pets-preview` | Headless sprite sheets, scenario GIFs, the app icon | Core, Art, Render, Demo |
+| `pr-pets-preview` | Headless sprite sheets, doghouse colours, scenario GIFs, the app icon | Core, Art, Render, Demo |
 
 ## Where decisions live
 

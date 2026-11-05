@@ -78,7 +78,7 @@ screenshots: build
 
 # Refreshes the images the README uses.
 docs-images: preview screenshots
-	cp previews/pets.png previews/scenario-life.gif previews/scenario-kennel.gif previews/scenario-hover.gif previews/scenario-handled.gif docs/images/
+	cp previews/pets.png previews/doghouses.png previews/scenario-life.gif previews/scenario-kennel.gif previews/scenario-hover.gif previews/scenario-handled.gif docs/images/
 	cp previews/app/pr-pets.png docs/images/dashboard.png
 	cp previews/app/pet-card.png docs/images/pet-card.png
 

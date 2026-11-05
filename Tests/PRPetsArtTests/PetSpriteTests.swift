@@ -79,3 +79,24 @@ struct DoghouseTests {
         #expect(doorPixel != image[6, DoghouseArt.height - 4], "the doorway is darker than the wall")
     }
 }
+
+@Suite("Doghouse art")
+struct DoghouseArtTests {
+    @Test func aRainbowDoghouseHasADifferentWallColourOnEveryPlank() {
+        let image = DoghouseArt.image(painted: DoghouseColour(style: .rainbow))
+        // Column 7 is wall all the way down and clear of the door; plank lines are one row in four.
+        let wall = (14...27).filter { !($0 - 12).isMultiple(of: 4) }.map { image[7, $0] }
+        #expect(Set(wall).count == wall.count)
+    }
+
+    @Test func paintingChangesTheColourButNotTheShape() {
+        let red = DoghouseArt.image(painted: .default)
+        let blue = DoghouseArt.image(painted: DoghouseColour(style: .ombre, primary: 0x2255cc, secondary: 0x88ddff))
+        #expect(red != blue)
+        for y in 0..<red.height {
+            for x in 0..<red.width {
+                #expect(red.isOpaque(x: x, y: y) == blue.isOpaque(x: x, y: y))
+            }
+        }
+    }
+}
