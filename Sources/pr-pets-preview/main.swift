@@ -7,6 +7,7 @@ let outputDirectory = URL(fileURLWithPath: arguments.count > 1 ? arguments[argum
 
 func writeSheets() throws {
     try ImageWriter.writePNG(ContactSheet.render(seedCount: 60, pose: .stand, scale: 6), to: outputDirectory.appending(path: "pets.png"))
+    try ImageWriter.writePNG(DoghouseSheet.render(scale: 8), to: outputDirectory.appending(path: "doghouses.png"))
     try ImageWriter.writePNG(ContactSheet.renderPoses(seedCount: 8, scale: 6), to: outputDirectory.appending(path: "poses.png"))
     for species in Species.allCases {
         let image = ContactSheet.render(seedCount: 20, pose: .stand, scale: 8, species: [species])
@@ -32,6 +33,8 @@ do {
             throw PreviewError.unknownCommand("scenario \(name) (have: \(Scenario.all.map(\.name).joined(separator: ", ")))")
         }
         try writeScenario(scenario)
+    case "doghouses":
+        try ImageWriter.writePNG(DoghouseSheet.render(scale: 8), to: outputDirectory.appending(path: "doghouses.png"))
     case "icon":
         try AppIcon.writeIconset(to: outputDirectory)
     case "scenarios":

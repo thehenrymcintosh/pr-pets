@@ -81,7 +81,7 @@ struct ScenarioRecorder {
                 let currentBoard = board()
                 let scene = YardScene(
                     viewport: viewport, yard: yard,
-                    doghouse: DoghouseStatus(waitingCount: currentBoard.waitingPetCount, petsAreInside: preferences.petsAreInside),
+                    doghouse: DoghouseStatus(waitingCount: currentBoard.waitingPetCount, petsAreInside: preferences.petsAreInside, colour: preferences.doghouseColour),
                     hoverCard: card
                 )
                 let canvas = PreviewCanvas(width: Int(Self.viewSize.width), height: Int(Self.viewSize.height), background: nil)

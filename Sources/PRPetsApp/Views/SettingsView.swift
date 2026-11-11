@@ -296,6 +296,14 @@ struct PetSettings: View {
 struct PlacementSettings: View {
     @ObservedObject var model: AppModel
 
+    /// A colour setting stored as `0xRRGGBB`, as something `ColorPicker` can edit.
+    private func colourBinding(_ keyPath: WritableKeyPath<Preferences, UInt32>) -> Binding<Color> {
+        Binding(
+            get: { Color(hex: model.preferences[keyPath: keyPath]) },
+            set: { colour in model.updatePreferences { $0[keyPath: keyPath] = colour.hex } }
+        )
+    }
+
     var body: some View {
         Section("Size") {
             LabeledContent("Scale") {
@@ -303,6 +311,24 @@ struct PlacementSettings: View {
                     Slider(value: setting(model, \.scale), in: Preferences.scaleRange, step: 0.5)
                     Text(String(format: "%.1f×", model.preferences.scale)).monospacedDigit().frame(width: 44, alignment: .trailing)
                 }
+            }
+        }
+        Section("Doghouse") {
+            Picker("Colour", selection: setting(model, \.doghouseColour.style)) {
+                Text("Solid").tag(DoghouseColour.Style.solid)
+                Text("Ombré").tag(DoghouseColour.Style.ombre)
+                Text("Rainbow").tag(DoghouseColour.Style.rainbow)
+            }
+            .pickerStyle(.segmented)
+            switch model.preferences.doghouseColour.style {
+            case .solid:
+                ColorPicker("Paint", selection: colourBinding(\.doghouseColour.primary), supportsOpacity: false)
+            case .ombre:
+                ColorPicker("Roof", selection: colourBinding(\.doghouseColour.primary), supportsOpacity: false)
+                ColorPicker("Ground", selection: colourBinding(\.doghouseColour.secondary), supportsOpacity: false)
+            case .rainbow:
+                Text("Every colour of the rainbow, from the roof down.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         Section("Where pets roam") {
@@ -389,5 +415,23 @@ private struct UpdateStatusText: View {
         .font(.caption)
         .foregroundStyle(.secondary)
         .textSelection(.enabled)
+    }
+}
+
+private extension Color {
+    init(hex: UInt32) {
+        self.init(
+            .sRGB,
+            red: Double((hex >> 16) & 0xff) / 255,
+            green: Double((hex >> 8) & 0xff) / 255,
+            blue: Double(hex & 0xff) / 255
+        )
+    }
+
+    /// `0xRRGGBB` in sRGB, which is what the doghouse is painted in.
+    var hex: UInt32 {
+        let colour = NSColor(self).usingColorSpace(.sRGB) ?? .black
+        func byte(_ value: CGFloat) -> UInt32 { UInt32((min(max(value, 0), 1) * 255).rounded()) }
+        return byte(colour.redComponent) << 16 | byte(colour.greenComponent) << 8 | byte(colour.blueComponent)
     }
 }

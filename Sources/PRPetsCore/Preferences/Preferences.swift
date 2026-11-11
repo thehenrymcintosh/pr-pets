@@ -45,6 +45,7 @@ public struct Preferences: Hashable, Codable, Sendable {
     /// Width of the roaming strip in points when `roamingArea` is `.nearDoghouse`.
     public var roamingWidth: Double = 520
     public var placement: DoghousePlacement = .default
+    public var doghouseColour: DoghouseColour = .default
     /// Hide the overlay while an app is full screen or presenting on the doghouse's display.
     public var hideDuringFullScreen: Bool = true
 
@@ -132,6 +133,7 @@ extension Preferences {
         roamingArea = value(.roamingArea, defaults.roamingArea)
         roamingWidth = value(.roamingWidth, defaults.roamingWidth)
         placement = value(.placement, defaults.placement)
+        doghouseColour = value(.doghouseColour, defaults.doghouseColour)
         hideDuringFullScreen = value(.hideDuringFullScreen, defaults.hideDuringFullScreen)
         showMenuBarIcon = value(.showMenuBarIcon, defaults.showMenuBarIcon)
         launchAtLogin = value(.launchAtLogin, defaults.launchAtLogin)

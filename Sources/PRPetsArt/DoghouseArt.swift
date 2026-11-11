@@ -1,4 +1,6 @@
-/// The red doghouse the pets live in, drawn from the front with an arched door.
+import PRPetsCore
+
+/// The doghouse the pets live in, drawn from the front with an arched door. Red unless told otherwise.
 public enum DoghouseArt {
     public static let width = 34
     public static let height = 30
@@ -7,16 +9,23 @@ public enum DoghouseArt {
     /// Height of the door opening in art pixels.
     public static let doorHeight = 11
 
-    private static let wall = RGBA(hex: 0xd8333a)
-    private static let wallShade = RGBA(hex: 0xb5242f)
-    private static let roof = RGBA(hex: 0xa81e2a)
-    private static let roofHighlight = RGBA(hex: 0xc72a35)
+    /// How the plank lines and roof boards differ from the wall colour at the same height. Worked out against the
+    /// original red, so the default doghouse looks the way it always has.
+    private static let wallShadeDarkening = -0.17
+    private static let roofDarkening = -0.28
+    private static let roofHighlightDarkening = -0.08
+
     private static let doorway = RGBA(hex: 0x1c1420)
     private static let outline = RGBA(hex: 0x2a0f16)
 
-    public static let image: PixelImage = draw()
+    /// The red doghouse, for places such as the app icon that don't take a colour setting.
+    public static let image: PixelImage = image(painted: .default)
 
-    private static func draw() -> PixelImage {
+    public static func image(painted colour: DoghouseColour) -> PixelImage {
+        draw(colour)
+    }
+
+    private static func draw(_ colour: DoghouseColour) -> PixelImage {
         var image = PixelImage(width: width, height: height)
         let centre = Double(width - 1) / 2
         let roofRows = 0...12
@@ -24,12 +33,17 @@ public enum DoghouseArt {
         let wallColumns = 5...(width - 6)
 
         for row in wallRows {
+            let wall = wallColour(atRow: row, of: colour)
+            let wallShade = wall.lightened(by: wallShadeDarkening)
             for column in wallColumns {
                 let isPlankLine = (row - wallRows.lowerBound).isMultiple(of: 4) && row != wallRows.lowerBound
                 image[column, row] = isPlankLine ? wallShade : wall
             }
         }
         for row in roofRows {
+            let wall = wallColour(atRow: row, of: colour)
+            let roof = wall.lightened(by: roofDarkening)
+            let roofHighlight = wall.lightened(by: roofHighlightDarkening)
             let outerHalfWidth = 1.5 + Double(row) * 1.25
             let innerHalfWidth = outerHalfWidth - 3.2
             for column in 0..<width {
@@ -45,6 +59,11 @@ public enum DoghouseArt {
         }
         paintDoor(on: &image)
         return outlined(image)
+    }
+
+    /// Measured over the whole picture rather than per part, so a gradient runs unbroken from the roof onto the wall.
+    private static func wallColour(atRow row: Int, of colour: DoghouseColour) -> RGBA {
+        RGBA(hex: colour.hex(atFraction: Double(row) / Double(height - 1)))
     }
 
     private static func paintDoor(on image: inout PixelImage) {

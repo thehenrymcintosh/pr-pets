@@ -9,11 +9,13 @@ public struct DoghouseStatus: Hashable, Sendable {
     public var petsAreInside: Bool
     /// The last refresh failed; the dashboard has the details.
     public var hasProblem: Bool
+    public var colour: DoghouseColour
 
-    public init(waitingCount: Int = 0, petsAreInside: Bool = false, hasProblem: Bool = false) {
+    public init(waitingCount: Int = 0, petsAreInside: Bool = false, hasProblem: Bool = false, colour: DoghouseColour = .default) {
         self.waitingCount = waitingCount
         self.petsAreInside = petsAreInside
         self.hasProblem = hasProblem
+        self.colour = colour
     }
 }
 
