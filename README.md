@@ -56,7 +56,7 @@ By default only review requests get pets. Turn on **Settings → Pets → Who ge
 
 ### Stacked PRs
 
-When PRs are based on each other's branches, PR Pets treats them as a stack. Every pet in a stack shares a look, wears a blue collar with a gold tag, and its name tag shows where it sits in the stack, such as `alice · 2/4`.
+When PRs are based on each other's branches, PR Pets treats them as a stack. Every pet in a stack shares a look, wears a collar with a gold tag, usually in a colour of its own, and its name tag shows where it sits in the stack, such as `alice · 2/4`.
 
 ### Click a pet
 
@@ -96,6 +96,7 @@ Every pet is generated from a seed that's saved for its PR, so it keeps its look
 - pattern: tabby, patches, socks, tuxedo, spots or points
 - ears, tail and build
 - an occasional bow, bandana or flower
+- collar colour, from a dozen options, which only shows when a pet is part of a stack
 - temperament, which sets how energetic, sleepy and curious it is
 
 <p align="center"><img src="docs/images/poses.png" alt="Eight pets each shown in all thirteen poses"></p>
