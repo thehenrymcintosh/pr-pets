@@ -74,11 +74,11 @@ preview: build
 
 # Launches the real app on demo data, has it render its own windows to ./previews/app, then quits.
 screenshots: build
-	PR_PETS_DATA_SOURCE=demo PR_PETS_DEBUG_SNAPSHOTS=$(CURDIR)/previews/app $(BUILD_DIR)/debug/PRPets
+	PR_PETS_DATA_SOURCE=demo PR_PETS_DEBUG_SNAPSHOTS="$(CURDIR)/previews/app" $(BUILD_DIR)/debug/PRPets
 
 # Refreshes the images the README uses.
 docs-images: preview screenshots
-	cp previews/pets.png previews/doghouses.png previews/scenario-life.gif previews/scenario-kennel.gif previews/scenario-hover.gif previews/scenario-handled.gif docs/images/
+	cp previews/pets.png previews/doghouses.png previews/sizes.png previews/poses.png previews/species-*.png previews/scenario-arrivals.gif previews/scenario-screen-width.gif previews/scenario-life.gif previews/scenario-kennel.gif previews/scenario-hover.gif previews/scenario-handled.gif docs/images/
 	cp previews/app/pr-pets.png docs/images/dashboard.png
 	cp previews/app/pet-card.png docs/images/pet-card.png
 

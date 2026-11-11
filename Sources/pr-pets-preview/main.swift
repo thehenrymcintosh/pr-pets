@@ -26,7 +26,7 @@ func writeScenario(_ scenario: Scenario) throws {
 
 do {
     switch command {
-    case "sheet", "species", "poses", "sizes":
+    case "sheet", "species", "poses", "sizes", "doghouses":
         try writeSheets()
     case "scenario":
         let name = arguments.count > 2 ? arguments[1] : ""
@@ -34,8 +34,6 @@ do {
             throw PreviewError.unknownCommand("scenario \(name) (have: \(Scenario.all.map(\.name).joined(separator: ", ")))")
         }
         try writeScenario(scenario)
-    case "doghouses":
-        try ImageWriter.writePNG(DoghouseSheet.render(scale: 8), to: outputDirectory.appending(path: "doghouses.png"))
     case "icon":
         try AppIcon.writeIconset(to: outputDirectory)
     case "scenarios":

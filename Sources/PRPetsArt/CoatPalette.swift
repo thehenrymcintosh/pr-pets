@@ -78,12 +78,15 @@ struct CoatPalette: Sendable {
         }
     }
 
+    /// How far apart in RGB a collar must be from the fur it sits on.
+    private static let minimumCollarContrast = 90.0
+
     /// The genome's collar, or the next colour along if it would blend into the fur it sits on.
     private static func collarColour(_ collar: CollarColour, standingOutFrom fur: [RGBA]) -> RGBA {
         let colours = CollarColour.allCases
         let start = colours.firstIndex(of: collar)!
         let candidates = (0..<colours.count).map { colours[(start + $0) % colours.count] }.map(collarColour)
-        return candidates.first { candidate in fur.allSatisfy { candidate.distance(to: $0) >= 90 } } ?? candidates[0]
+        return candidates.first { candidate in fur.allSatisfy { candidate.distance(to: $0) >= minimumCollarContrast } } ?? candidates[0]
     }
 
     private static func collarColour(_ collar: CollarColour) -> RGBA {

@@ -11,9 +11,14 @@ struct CoatResolver {
         self.genome = genome
         self.palette = palette
         self.canvas = canvas
-        // String(describing:) of a value type is stable across runs, unlike Hasher. The collar is left out
-        // (by fixing it) so spots and patches stay put whatever collar the pet wears.
-        self.patternSeed = Seed(hashing: String(describing: genome.wearing(.blue))).rawValue
+        self.patternSeed = Self.patternSeed(for: genome)
+    }
+
+    /// Seeded from the fur alone, so spots and patches stay put whatever the pet's collar or build.
+    /// Pets in a stack share fur but each takes its build from its own PR.
+    static func patternSeed(for genome: PetGenome) -> UInt64 {
+        let fur = "\(genome.species) \(genome.coat) \(genome.secondaryCoat) \(genome.pattern) \(genome.coatTint)"
+        return Seed(hashing: fur).rawValue
     }
 
     func image() -> PixelImage {

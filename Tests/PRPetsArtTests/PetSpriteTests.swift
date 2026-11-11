@@ -50,6 +50,20 @@ struct PetSpriteTests {
         #expect(plain != collared)
     }
 
+    @Test func markingsStayPutWhateverTheCollarOrBuild() {
+        for index in 0..<20 {
+            let genome = sampleGenomes[index]
+            let seed = CoatResolver.patternSeed(for: genome)
+            for build in BodyBuild.allCases {
+                let resized = GenomeFactory.genome(for: Seed(hashing: "art-\(index)"), build: build)
+                #expect(CoatResolver.patternSeed(for: resized) == seed)
+            }
+            for collar in CollarColour.allCases {
+                #expect(CoatResolver.patternSeed(for: genome.wearing(collar)) == seed)
+            }
+        }
+    }
+
     @Test func theCollarColourShowsInTheSprite() {
         let genome = sampleGenomes[3]
         let adornment = PetAdornment(wearsStackCollar: true)

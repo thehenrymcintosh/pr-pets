@@ -50,13 +50,17 @@ Pets pick spots away from one another, walk in front of and behind the doghouse,
 
 <p align="center"><img src="docs/images/scenario-screen-width.gif" alt="Pets roaming across the full width of the screen"></p>
 
+Paint the doghouse in **Settings → Placement**: one colour, an ombré from roof to ground, or a rainbow.
+
+<p align="center"><img src="docs/images/doghouses.png" alt="Five doghouses: the default red, solid blue, a yellow-to-red ombré, a blue ombré and a rainbow"></p>
+
 ### Your own PRs, too
 
 By default only review requests get pets. Turn on **Settings → Pets → Who gets a pet** for your own PRs that need something from you, or that are waiting on reviewers. This is handy if PRs get opened for you in the background. Their pets wear a reminder as a name tag: *ready to merge*, *changes requested*, *needs reviewers*, *finish draft* or *in review*.
 
 ### Stacked PRs
 
-When PRs are based on each other's branches, PR Pets treats them as a stack. Every pet in a stack shares a look, wears a collar with a gold tag, usually in a colour of its own, and its name tag shows where it sits in the stack, such as `alice · 2/4`.
+When PRs are based on each other's branches, PR Pets treats them as a stack. Every pet in a stack shares its colours and markings (its size still follows its own PR), wears a collar with a gold tag, usually in a colour of its own, and its name tag shows where it sits in the stack, such as `alice · 2/4`.
 
 ### Click a pet
 
@@ -151,7 +155,7 @@ Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
 You need macOS 14+ and either Xcode or just the Command Line Tools (`xcode-select --install`).
 
 ```sh
-make test         # 93 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
+make test         # 132 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
 make demo         # run the app against scripted demo PRs
 make preview      # render sprite sheets, doghouse colours and scenario GIFs to ./previews
 make screenshots  # run the real app on demo data and save its windows to ./previews/app
