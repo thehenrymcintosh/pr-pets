@@ -30,7 +30,8 @@ struct PetSkeleton: Sendable {
     init(build: BodyBuild, pose: PetPose) {
         let (bodyX, bodyTop) = Self.bodyExtent(for: build)
         let ground = Self.groundRow
-        let legLength = 2
+        // The chonkiest pets get stubby legs: a deeper belly without pushing tall ears out of the frame.
+        let legLength = build == .extraChonky ? 1 : 2
         let standingBodyBottom = ground - legLength
 
         switch pose {
@@ -67,11 +68,14 @@ struct PetSkeleton: Sendable {
         case .sleep1, .sleep2:
             posture = .lying
             let breath = pose == .sleep2 ? 1 : 0
-            let lyingTop = ground - 3 - (bodyTop < 16 ? 1 : 0) - breath
-            body = ((bodyX.lowerBound - 1)...(bodyX.upperBound), lyingTop...ground)
-            head = (bodyX.upperBound - 1, ground - 5)
-            legs = [Leg(x: bodyX.upperBound + 4, top: ground, bottom: ground, isFarSide: false)]
-            tailRoot = (bodyX.lowerBound - 1, ground - 1)
+            // Lying down stretches a pet out, so cap the length at chonky's to keep tail and head in the frame;
+            // the extra chonk goes into a taller belly instead.
+            let lyingX = max(bodyX.lowerBound, 9)...min(bodyX.upperBound, 19)
+            let lyingTop = ground - 3 - (bodyTop < 16 ? 1 : 0) - (build == .extraChonky ? 1 : 0) - breath
+            body = ((lyingX.lowerBound - 1)...(lyingX.upperBound), lyingTop...ground)
+            head = (lyingX.upperBound - 1, ground - 5)
+            legs = [Leg(x: lyingX.upperBound + 4, top: ground, bottom: ground, isFarSide: false)]
+            tailRoot = (lyingX.lowerBound - 1, ground - 1)
             tailSway = 0
             eyesClosed = true
         }
@@ -79,9 +83,10 @@ struct PetSkeleton: Sendable {
 
     private static func bodyExtent(for build: BodyBuild) -> (x: ClosedRange<Int>, top: Int) {
         switch build {
-        case .slim: (10...18, 17)
+        case .slim: (11...17, 17)
         case .regular: (10...18, 16)
         case .chonky: (9...19, 15)
+        case .extraChonky: (8...20, 15)
         }
     }
 
