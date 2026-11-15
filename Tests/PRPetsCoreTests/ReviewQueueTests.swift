@@ -53,7 +53,7 @@ struct ReviewQueueTests {
 
     @Test func demoScriptFillsEveryLane() {
         let demo = ReviewQueue(snapshot: DemoScript.snapshot(at: 0), policy: QueuePolicy())
-        #expect(demo.pullRequests(in: .needsMyReview).map(\.number) == [213, 88, 19])
+        #expect(demo.pullRequests(in: .needsMyReview).map(\.number) == [213, 214, 88, 19])
         #expect(demo.pullRequests(in: .needsMyAction).map(\.number).sorted() == [13, 77, 78])
         #expect(demo.pullRequests(in: .waitingOnOthers).map(\.number) == [12])
     }
@@ -115,6 +115,6 @@ struct StackTests {
         let demo = ReviewQueue(snapshot: DemoScript.snapshot(at: 0), policy: QueuePolicy())
         let checkout = demo.groups(in: .needsMyReview).first { $0.stack.isStacked }
         #expect(checkout?.stack.members.map(\.number) == [212, 213, 214, 215])
-        #expect(checkout?.highlightedMembers.map(\.number) == [213])
+        #expect(checkout?.highlightedMembers.map(\.number) == [213, 214])
     }
 }

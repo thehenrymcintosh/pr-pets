@@ -89,7 +89,7 @@ public struct YardRenderer {
         let priorityOrder = arrivalOrder.filter { $0 == hoveredID } + arrivalOrder.filter { $0 != hoveredID }
         let lines: [(PullRequestID, TextLine)] = priorityOrder.compactMap { id in
             guard let placement = placementByID[id], placement.opacity > 0.2, let label = placement.pet.entry.label else { return nil }
-            let text = [label, placement.pet.entry.stackPosition?.description].compactMap { $0 }.joined(separator: " · ")
+            let text = [label, placement.pet.entry.stackTag].compactMap { $0 }.joined(separator: " · ")
             return (id, TextLine(text, size: fontSize, weight: .semibold, colour: Palette.labelText))
         }
         let requests = lines.map { id, line in

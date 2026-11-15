@@ -132,9 +132,47 @@ struct PetPresenceTests {
         let stack = PullRequestFixture.stack([10, 11, 12]) { offset, pullRequest in
             offset == 0 ? pullRequest : pullRequest.with(requestedReviewers: [me])
         }
-        let roster = presence(Array(stack[1...]), context: [stack[0]]).roster(petsAreInside: false)
+        let roster = presence(Array(stack[1...]), context: [stack[0]], policy: PetPresencePolicy(onePetPerStack: false))
+            .roster(petsAreInside: false)
         #expect(roster.entries.map(\.stackPosition) == [StackPosition(index: 2, count: 3), StackPosition(index: 3, count: 3)])
+        #expect(roster.entries.map(\.stackTag) == ["2/3", "3/3"])
         #expect(Set(roster.entries.map(\.genome)).count == 1)
+    }
+
+    @Test func aStackSharesOnePetForEveryPullRequestThatNeedsOne() {
+        let stack = PullRequestFixture.stack([10, 11, 12]) { offset, pullRequest in
+            offset == 0 ? pullRequest : pullRequest.with(requestedReviewers: [me])
+        }
+        let lone = PullRequestFixture.make(30, in: "acme/api", requestedReviewers: [me])
+        let roster = presence(Array(stack[1...]) + [lone], context: [stack[0]]).roster(petsAreInside: false)
+        #expect(roster.entries.map(\.id) == [stack[1].id, lone.id])
+        #expect(roster.entries[0].pullRequestIDs == [stack[1].id, stack[2].id])
+        #expect(roster.entries.map(\.stackTag) == ["2 PRs", nil])
+        #expect(roster.entries[0].stackPosition == StackPosition(index: 2, count: 3), "it still wears the stack's collar")
+    }
+
+    @Test func aStackWithOnePullRequestNeedingYouShowsItsPosition() {
+        let stack = PullRequestFixture.stack([10, 11, 12]) { offset, pullRequest in
+            offset == 1 ? pullRequest.with(requestedReviewers: [me]) : pullRequest
+        }
+        let roster = presence([stack[1]], context: [stack[0], stack[2]]).roster(petsAreInside: false)
+        #expect(roster.entries.map(\.stackTag) == ["2/3"])
+    }
+
+    @Test func aStacksPetIsSizedByAllItsPullRequestsTogether() {
+        let bottom = PullRequestFixture.make(10, head: "alice/stack-10", additions: 30, deletions: 0, requestedReviewers: [me])
+        let top = PullRequestFixture.make(11, head: "alice/stack-11", base: "alice/stack-10", additions: 30, deletions: 0, requestedReviewers: [me])
+        let shared = presence([bottom, top]).roster(petsAreInside: false)
+        let separate = presence([bottom, top], policy: PetPresencePolicy(onePetPerStack: false)).roster(petsAreInside: false)
+        #expect(shared.entries.map(\.genome.build) == [.regular])
+        #expect(separate.entries.map(\.genome.build) == [.slim, .slim])
+    }
+
+    @Test func theMaximumCountsPetsNotPullRequests() {
+        let stack = PullRequestFixture.stack([10, 11, 12]) { _, pullRequest in pullRequest.with(requestedReviewers: [me]) }
+        let lone = PullRequestFixture.make(30, in: "acme/api", requestedReviewers: [me])
+        let roster = presence(stack + [lone], policy: PetPresencePolicy(maximumPets: 2)).roster(petsAreInside: false)
+        #expect(roster.entries.map(\.pullRequestIDs.count) == [3, 1])
     }
 }
 

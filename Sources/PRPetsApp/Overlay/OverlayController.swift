@@ -72,6 +72,8 @@ final class OverlayController: NSObject {
         }
         let roster = model.board?.roster ?? .empty
         yard.reconcile(with: roster)
+        hoveredPetID = hoveredPetID.map(yard.currentID(of:))
+        popoverPetID = popoverPetID.map(yard.currentID(of:))
         yardView.sprites.retainOnly(Set(yard.pets.map(\.genome) + roster.entries.map(\.genome)))
         displayLink?.isPaused = false
         updateVisibility()
@@ -140,9 +142,14 @@ final class OverlayController: NSObject {
     }
 
     private func hoverCard() -> HoverCard? {
-        guard model.effectivePreferences.showHoverCards, popover == nil,
-              let id = hoveredPetID, let pullRequest = model.snapshot?.pullRequest(withID: id) else { return nil }
-        return HoverCard(petID: id, title: pullRequest.title, reference: pullRequest.shortReference, lineDelta: pullRequest.lineDelta)
+        guard model.effectivePreferences.showHoverCards, popover == nil, let id = hoveredPetID else { return nil }
+        return HoverCard(petID: id, pullRequests: pullRequests(for: id))
+    }
+
+    /// The PRs a pet stands for, bottom of the stack first.
+    private func pullRequests(for petID: PullRequestID) -> [PullRequest] {
+        let ids = yard.pet(withID: petID)?.entry.pullRequestIDs ?? [petID]
+        return ids.compactMap { model.snapshot?.pullRequest(withID: $0) }
     }
 
     // MARK: - Mouse
@@ -177,18 +184,28 @@ final class OverlayController: NSObject {
     // MARK: - Pet card
 
     private func showCard(for petID: PullRequestID) {
-        guard let pullRequest = model.snapshot?.pullRequest(withID: petID),
+        let pullRequests = pullRequests(for: petID)
+        guard let pullRequest = pullRequests.first,
               let placement = yard.pet(withID: petID).map({ yardView.scene?.placement(of: $0, using: yardView.sprites) }) ?? nil
         else { return }
         closeCard()
         yard.hold(petID)
-        let card = PetCardView(
-            pullRequest: pullRequest,
-            stackPosition: model.board?.presence.stackPosition(of: pullRequest),
-            onOpen: { [weak self] in self?.model.open(pullRequest); self?.closeCard() },
-            onDismiss: { [weak self] in self?.model.dismiss(pullRequest); self?.closeCard() },
-            onMute: { [weak self] in self?.model.mute(pullRequest); self?.closeCard() }
-        )
+        let card: AnyView = if pullRequests.count == 1 {
+            AnyView(PetCardView(
+                pullRequest: pullRequest,
+                stackPosition: model.board?.presence.stackPosition(of: pullRequest),
+                onOpen: { [weak self] in self?.model.open(pullRequest); self?.closeCard() },
+                onDismiss: { [weak self] in self?.model.dismiss(pullRequest); self?.closeCard() },
+                onMute: { [weak self] in self?.model.mute(pullRequest); self?.closeCard() }
+            ))
+        } else {
+            AnyView(StackCardView(
+                members: pullRequests.map { ($0, model.board?.presence.stackPosition(of: $0)) },
+                onOpen: { [weak self] in self?.model.open($0) },
+                onDismiss: { [weak self] in self?.model.dismiss($0); self?.closeCard() },
+                onMute: { [weak self] in self?.model.mute($0); self?.closeCard() }
+            ))
+        }
         let popover = NSPopover()
         popover.behavior = .transient
         popover.animates = true
@@ -260,12 +277,22 @@ extension OverlayController: YardViewDelegate {
     }
 
     private func petMenu(for id: PullRequestID) -> NSMenu {
-        guard let pullRequest = model.snapshot?.pullRequest(withID: id) else { return NSMenu() }
-        return NSMenu.build([
-            .item("Open \(pullRequest.shortReference)") { [weak self] in self?.model.open(pullRequest) },
-            .item("Dismiss Until New Commits") { [weak self] in self?.model.dismiss(pullRequest) },
-            .item("Mute") { [weak self] in self?.model.mute(pullRequest) },
-        ])
+        let pullRequests = pullRequests(for: id)
+        if pullRequests.count == 1, let pullRequest = pullRequests.first {
+            return NSMenu.build([
+                .item("Open \(pullRequest.shortReference)") { [weak self] in self?.model.open(pullRequest) },
+                .item("Dismiss Until New Commits") { [weak self] in self?.model.dismiss(pullRequest) },
+                .item("Mute") { [weak self] in self?.model.mute(pullRequest) },
+            ])
+        }
+        return NSMenu.build(
+            pullRequests.map { pullRequest in .item("Open \(pullRequest.shortReference)") { [weak self] in self?.model.open(pullRequest) } }
+                + [.separator]
+                + [
+                    .item("Dismiss All Until New Commits") { [weak self] in pullRequests.forEach { self?.model.dismiss($0) } },
+                    .item("Mute All") { [weak self] in pullRequests.forEach { self?.model.mute($0) } },
+                ]
+        )
     }
 }
 

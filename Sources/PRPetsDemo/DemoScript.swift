@@ -29,8 +29,8 @@ public enum DemoScript {
             titles: ["Add checkout service", "Extract checkout form state", "Wire checkout into cart", "Checkout analytics events"]
         ) { offset, pullRequest in
             switch offset {
-            case 1: pullRequest.with(requestedReviewers: [me])
-            case 2 where time >= 60: pullRequest.with(requestedReviewers: [me])
+            case 0 where time >= 60: pullRequest.with(requestedReviewers: [me])
+            case 1, 2: pullRequest.with(requestedReviewers: [me])
             case 3: pullRequest.with(isDraft: true)
             default: pullRequest.with(requestedReviewers: [.user(Login("zed"))])
             }

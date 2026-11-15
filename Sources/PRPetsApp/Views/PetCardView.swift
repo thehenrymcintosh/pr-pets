@@ -43,6 +43,57 @@ struct PetCardView: View {
     }
 }
 
+/// The popover for a pet that stands for several PRs in one stack: a row for each, bottom of the stack first.
+struct StackCardView: View {
+    let members: [(pullRequest: PullRequest, stackPosition: StackPosition?)]
+    let onOpen: (PullRequest) -> Void
+    let onDismiss: (PullRequest) -> Void
+    let onMute: (PullRequest) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let author = members.first?.pullRequest.author {
+                Text("\(members.count) PRs from \(author.displayName ?? author.login.rawValue)'s stack")
+                    .font(.headline)
+            }
+            ForEach(members, id: \.pullRequest.id) { member in
+                Divider()
+                row(member.pullRequest, stackPosition: member.stackPosition)
+            }
+        }
+        .padding(14)
+        .frame(width: 340)
+    }
+
+    private func row(_ pullRequest: PullRequest, stackPosition: StackPosition?) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(pullRequest.title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 6) {
+                    Text(pullRequest.shortReference).font(.subheadline).foregroundStyle(.secondary)
+                    if let stackPosition { StackBadge(position: stackPosition) }
+                    LineDeltaView(lineDelta: pullRequest.lineDelta)
+                }
+            }
+            Spacer(minLength: 0)
+            Button("Open") { onOpen(pullRequest) }
+            Menu {
+                Button("Dismiss Until New Commits") { onDismiss(pullRequest) }
+                Button("Mute") { onMute(pullRequest) }
+            } label: {
+                Image(systemName: "ellipsis")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Send this PR's part of the pet home")
+        }
+    }
+}
+
 struct LineDeltaView: View {
     let lineDelta: LineDelta
     var showsFiles = false

@@ -3,15 +3,23 @@ import Foundation
 /// A pet that should currently be out in the yard.
 public struct PetRosterEntry: Identifiable, Hashable, Sendable {
     public let id: PullRequestID
+    /// Every PR this pet stands for, bottom of the stack first. Just `id`, unless a stack shares one pet.
+    public let pullRequestIDs: [PullRequestID]
     public let genome: PetGenome
     public let label: String?
     public let stackPosition: StackPosition?
 
-    public init(id: PullRequestID, genome: PetGenome, label: String?, stackPosition: StackPosition?) {
+    public init(id: PullRequestID, pullRequestIDs: [PullRequestID]? = nil, genome: PetGenome, label: String?, stackPosition: StackPosition?) {
         self.id = id
+        self.pullRequestIDs = pullRequestIDs ?? [id]
         self.genome = genome
         self.label = label
         self.stackPosition = stackPosition
+    }
+
+    /// Follows the name tag: how many PRs a stack's pet stands for, or one PR's place in its stack.
+    public var stackTag: String? {
+        pullRequestIDs.count > 1 ? "\(pullRequestIDs.count) PRs" : stackPosition?.description
     }
 }
 
@@ -39,6 +47,8 @@ public struct PetPresencePolicy: Hashable, Codable, Sendable {
     public var allowedSpecies: [Species]
     /// Which dashboard columns get pets. Reviews only, by default.
     public var petLanes: Set<Lane>
+    /// A stack gets one pet for all its PRs that deserve one, rather than a pet each.
+    public var onePetPerStack: Bool
 
     public static let defaultPetLanes: Set<Lane> = [.needsMyReview]
 
@@ -47,9 +57,11 @@ public struct PetPresencePolicy: Hashable, Codable, Sendable {
         maximumPets: Int = 12,
         labelStyle: PetLabelStyle = .authorLogin,
         allowedSpecies: [Species] = Species.allCases,
-        petLanes: Set<Lane> = PetPresencePolicy.defaultPetLanes
+        petLanes: Set<Lane> = PetPresencePolicy.defaultPetLanes,
+        onePetPerStack: Bool = true
     ) {
         self.petLanes = petLanes
+        self.onePetPerStack = onePetPerStack
         self.hideWhenApprovedByOthers = hideWhenApprovedByOthers
         self.maximumPets = maximumPets
         self.labelStyle = labelStyle
@@ -94,18 +106,37 @@ public struct PetPresence: Sendable {
 
     public func roster(petsAreInside: Bool) -> PetRoster {
         guard !petsAreInside else { return .empty }
-        let entries = Lane.allCases.flatMap(queue.pullRequests(in:))
-            .filter { absence(of: $0) == nil }
-            .prefix(policy.maximumPets)
-            .map(entry(for:))
-        return PetRoster(entries: Array(entries))
+        let deserving = Lane.allCases.flatMap(queue.pullRequests(in:)).filter { absence(of: $0) == nil }
+        let groups = policy.onePetPerStack ? groupedByStack(deserving) : deserving.map { [$0] }
+        return PetRoster(entries: groups.prefix(policy.maximumPets).map(entry(for:)))
     }
 
     public func genome(for pullRequest: PullRequest) -> PetGenome {
+        genome(for: [pullRequest])
+    }
+
+    /// Stack members share a seed, so a stack's pet looks like any one of them; its size is the reading they add up to.
+    private func genome(for pullRequests: [PullRequest]) -> PetGenome {
+        let pullRequest = pullRequests[0]
         let seed = identities.seed(for: pullRequest) ?? Seed(hashing: pullRequest.id.rawValue)
-        return GenomeFactory.genome(
-            for: seed, allowedSpecies: policy.allowedSpecies, build: PullRequestSize(pullRequest.lineDelta).build
-        )
+        let lineDelta = pullRequests.map(\.lineDelta).reduce(LineDelta(additions: 0, deletions: 0, changedFiles: 0), +)
+        return GenomeFactory.genome(for: seed, allowedSpecies: policy.allowedSpecies, build: PullRequestSize(lineDelta).build)
+    }
+
+    /// Keeps the order of each stack's first appearance, with each stack's members bottom first.
+    private func groupedByStack(_ pullRequests: [PullRequest]) -> [[PullRequest]] {
+        var groups: [[PullRequest]] = []
+        var groupIndexByStackID: [PullRequestID: Int] = [:]
+        for pullRequest in pullRequests {
+            let stackID = queue.stack(containing: pullRequest)?.id ?? pullRequest.id
+            if let index = groupIndexByStackID[stackID] {
+                groups[index].append(pullRequest)
+            } else {
+                groupIndexByStackID[stackID] = groups.count
+                groups.append([pullRequest])
+            }
+        }
+        return groups.map { group in group.sorted { (stackPosition(of: $0)?.index ?? 0) < (stackPosition(of: $1)?.index ?? 0) } }
     }
 
     public func stackPosition(of pullRequest: PullRequest) -> StackPosition? {
@@ -113,10 +144,13 @@ public struct PetPresence: Sendable {
         return stack.position(of: pullRequest)
     }
 
-    private func entry(for pullRequest: PullRequest) -> PetRosterEntry {
-        PetRosterEntry(
+    /// The bottom-most PR speaks for the group: its ID, name tag and stack position.
+    private func entry(for pullRequests: [PullRequest]) -> PetRosterEntry {
+        let pullRequest = pullRequests[0]
+        return PetRosterEntry(
             id: pullRequest.id,
-            genome: genome(for: pullRequest),
+            pullRequestIDs: pullRequests.map(\.id),
+            genome: genome(for: pullRequests),
             label: label(for: pullRequest),
             stackPosition: stackPosition(of: pullRequest)
         )

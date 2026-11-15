@@ -60,7 +60,11 @@ By default only review requests get pets. Turn on **Settings → Pets → Who ge
 
 ### Stacked PRs
 
-When PRs are based on each other's branches, PR Pets treats them as a stack. Every pet in a stack shares its colours and markings (its size still follows its own PR), wears a collar with a gold tag, usually in a colour of its own, and its name tag shows where it sits in the stack, such as `alice · 2/4`.
+When PRs are based on each other's branches, PR Pets treats them as a stack. A stack gets **one pet** for all its PRs that need you, so a busy stack doesn't fill the yard with lookalikes. The pet wears a collar with a gold tag, usually in a colour of its own, and is sized by the stack's PRs added together. Its name tag says how many PRs it stands for, such as `alice · 3 PRs`, or where it sits in the stack when it's just one, such as `alice · 2/4`. Click it for a card with a row for each PR, to open, dismiss or mute them one at a time. When one is reviewed, the same pet carries on for the rest.
+
+<p align="center"><img src="docs/images/scenario-stacks.gif" alt="Two matching stack pets become one tagged alice · 2 PRs, which becomes 3 PRs when another joins, and its hover card says #212 and 2 more"></p>
+
+Prefer a pet each? Turn off **Settings → Pets → One pet per stack**. Pets in a stack then share colours and markings, each sized by its own PR.
 
 ### Click a pet
 
@@ -136,7 +140,7 @@ Open Settings from the doghouse's right-click menu, the menu bar paw, or the das
 | --- | --- |
 | **GitHub** | How often to check (default every 3 minutes), `gh` path, GitHub Enterprise host, whether team review requests count, whether to fetch whole stacks |
 | **Filters** | Only these orgs and users, and ignored repositories. One per row: type a name, paste several at once, paste GitHub links, or pick from repositories with open PRs. Ignoring a repository sends its pets home straight away |
-| **Pets** | Which columns get pets (just reviews by default; also your own PRs that need action or are in review), send inside, go home once someone else approves, hover cards, maximum pets, name tag (username, name, repo or none), which species can appear |
+| **Pets** | Which columns get pets (just reviews by default; also your own PRs that need action or are in review), send inside, go home once someone else approves, hover cards, one pet per stack, maximum pets, name tag (username, name, repo or none), which species can appear |
 | **Placement** | Scale, doghouse colour (solid, ombré or rainbow), roam near the doghouse (and how far) or across the whole screen, hide while an app is full screen or presenting (on by default), reset position |
 | **System** | Menu bar icon, launch at login, automatic update checks, the current version with a Check for Updates button, and Quit |
 
@@ -155,7 +159,7 @@ Settings are saved in `~/Library/Application Support/PR Pets/settings.json`.
 You need macOS 14+ and either Xcode or just the Command Line Tools (`xcode-select --install`).
 
 ```sh
-make test         # 132 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
+make test         # 139 tests: queue logic, stacks, triage, the pet simulation, sprites, rendering, gh parsing, updates
 make demo         # run the app against scripted demo PRs
 make preview      # render sprite sheets, doghouse colours and scenario GIFs to ./previews
 make screenshots  # run the real app on demo data and save its windows to ./previews/app
