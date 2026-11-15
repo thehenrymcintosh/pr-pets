@@ -66,7 +66,7 @@ public enum PetPose: String, CaseIterable, Hashable, Sendable {
 }
 
 public struct YardPet: Identifiable, Hashable, Sendable {
-    public let id: PullRequestID
+    public internal(set) var id: PullRequestID
     public internal(set) var entry: PetRosterEntry
     public internal(set) var position: YardPoint
     public internal(set) var facing: Facing

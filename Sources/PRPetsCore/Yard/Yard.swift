@@ -12,12 +12,24 @@ public struct Yard: Sendable {
     private var pendingArrivals: [PetRosterEntry] = []
     private var nextArrivalAt: Double = 0
     private var heldPetIDs: Set<PullRequestID> = []
+    /// Old ID to new, for stack pets that carried on under another PR, while they're still out.
+    private var handedOverIDs: [PullRequestID: PullRequestID] = [:]
 
     public init(geometry: YardGeometry) {
         self.geometry = geometry
     }
 
     public var isEmpty: Bool { pets.isEmpty && pendingArrivals.isEmpty }
+
+    /// The ID a pet known as `id` goes by now, following any stack hand-overs since.
+    public func currentID(of id: PullRequestID) -> PullRequestID {
+        var current = id
+        for _ in 0..<handedOverIDs.count {
+            guard let next = handedOverIDs[current] else { break }
+            current = next
+        }
+        return current
+    }
 
     public func pet(withID id: PullRequestID) -> YardPet? {
         pets.first { $0.id == id }
@@ -34,15 +46,31 @@ public struct Yard: Sendable {
     /// pets that were heading home but are wanted again turn around.
     public mutating func reconcile(with roster: PetRoster) {
         let wantedByID = Dictionary(uniqueKeysWithValues: roster.entries.map { ($0.id, $0) })
+        handOverStackPets(to: roster.entries, wantedIDs: Set(wantedByID.keys))
         pets = pets.map { pet in
             guard let wantedEntry = wantedByID[pet.id] else { return sendingHome(pet) }
             return updating(pet, to: wantedEntry)
         }
         let presentIDs = Set(pets.map(\.id))
-        let stillPending = pendingArrivals.filter { wantedByID[$0.id] != nil }
+        // Pets still waiting at the door take the latest entry too, so they don't come out in a stale look.
+        let stillPending = pendingArrivals.compactMap { wantedByID[$0.id] }.filter { !presentIDs.contains($0.id) }
         let pendingIDs = Set(stillPending.map(\.id))
         let newcomers = roster.entries.filter { !presentIDs.contains($0.id) && !pendingIDs.contains($0.id) }
         pendingArrivals = stillPending + newcomers
+        handedOverIDs = handedOverIDs.filter { old, _ in presentIDs.contains(currentID(of: old)) }
+    }
+
+    /// A stack's pet goes by its bottom-most PR. When that PR no longer needs a pet but others in the stack
+    /// still do, the same pet carries on for them, rather than running home while a twin comes out.
+    private mutating func handOverStackPets(to entries: [PetRosterEntry], wantedIDs: Set<PullRequestID>) {
+        for entry in entries where !pets.contains(where: { $0.id == entry.id }) {
+            guard let index = pets.firstIndex(where: { pet in
+                !wantedIDs.contains(pet.id) && !Set(pet.entry.pullRequestIDs).isDisjoint(with: entry.pullRequestIDs)
+            }) else { continue }
+            if heldPetIDs.remove(pets[index].id) != nil { heldPetIDs.insert(entry.id) }
+            handedOverIDs[pets[index].id] = entry.id
+            pets[index].id = entry.id
+        }
     }
 
     /// Holding a pet makes it sit and look at the user until released.

@@ -266,6 +266,8 @@ struct PetSettings: View {
             Toggle("Send pets inside", isOn: setting(model, \.petsAreInside))
             Toggle("Send a pet home once someone else approves", isOn: setting(model, \.hideWhenApprovedByOthers))
             Toggle("Show a summary when hovering a pet", isOn: setting(model, \.showHoverCards))
+            Toggle("One pet per stack", isOn: setting(model, \.onePetPerStack))
+                .help("A stack's PRs share a pet, sized by them all together. Click it to see each one.")
             Stepper("At most \(model.preferences.maximumPets) pets", value: setting(model, \.maximumPets), in: 1...30)
         }
         Section("Look") {

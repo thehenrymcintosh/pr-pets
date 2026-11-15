@@ -12,6 +12,7 @@ struct Scenario {
         case demoTime(TimeInterval)
         case mute(number: Int)
         case setPetsInside(Bool)
+        case setOnePetPerStack(Bool)
         case hover(number: Int?)
         case run(seconds: Double)
     }
@@ -32,9 +33,14 @@ struct Scenario {
         Scenario(name: "kennel", steps: [
             .demoTime(70), .run(seconds: 2), .setPetsInside(true), .run(seconds: 4), .setPetsInside(false), .run(seconds: 6),
         ], warmUp: 8),
-        Scenario(name: "hover", steps: [.demoTime(70), .run(seconds: 1), .hover(number: 213), .run(seconds: 3)], warmUp: 10),
+        Scenario(name: "hover", steps: [.demoTime(70), .run(seconds: 1), .hover(number: 212), .run(seconds: 3)], warmUp: 10),
         Scenario(name: "screen-width", steps: [.demoTime(70), .run(seconds: 16)], warmUp: 3, roamingArea: .screenWidth),
         Scenario(name: "startle", steps: [.demoTime(70), .run(seconds: 0.2), .setPetsInside(true), .run(seconds: 1.3)], warmUp: 8),
+        // Two pets for the checkout stack become one, then #212 joins and the same pet carries on for all three.
+        Scenario(name: "stacks", steps: [
+            .setOnePetPerStack(false), .demoTime(40), .run(seconds: 3), .setOnePetPerStack(true), .run(seconds: 4),
+            .demoTime(65), .run(seconds: 2), .hover(number: 212), .run(seconds: 3),
+        ], warmUp: 8),
         Scenario(name: "own-prs", steps: [.demoTime(0), .run(seconds: 10)], warmUp: 8, petLanes: Set(Lane.allCases)),
     ]
 }
@@ -75,8 +81,9 @@ struct ScenarioRecorder {
             for step in 0..<Int(seconds / Self.simulationStep) {
                 yard.advance(by: Self.simulationStep, using: &random)
                 guard capturing, step % Self.framesPerCapture == 0 else { continue }
-                let card = hoveredNumber.flatMap(pullRequest(number:)).map {
-                    HoverCard(petID: $0.id, title: $0.title, reference: $0.shortReference, lineDelta: $0.lineDelta)
+                let card = hoveredNumber.flatMap(pullRequest(number:)).flatMap { hovered in
+                    let ids = yard.pet(withID: hovered.id)?.entry.pullRequestIDs ?? [hovered.id]
+                    return HoverCard(petID: hovered.id, pullRequests: ids.compactMap { id in snapshot.pullRequest(withID: id) })
                 }
                 let currentBoard = board()
                 let scene = YardScene(
@@ -99,6 +106,8 @@ struct ScenarioRecorder {
                 if let target = pullRequest(number: number) { ledger = ledger.muting(target, at: snapshot.fetchedAt) }
             case .setPetsInside(let inside):
                 preferences.petsAreInside = inside
+            case .setOnePetPerStack(let shared):
+                preferences.onePetPerStack = shared
             case .hover(let number):
                 hoveredNumber.flatMap(pullRequest(number:)).map { yard.release($0.id) }
                 hoveredNumber = number

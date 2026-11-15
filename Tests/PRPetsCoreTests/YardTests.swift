@@ -12,6 +12,12 @@ private func entry(_ number: Int) -> PetRosterEntry {
 
 private func roster(_ numbers: [Int]) -> PetRoster { PetRoster(entries: numbers.map(entry)) }
 
+/// One pet standing for several PRs, going by the first.
+private func sharedEntry(_ numbers: [Int]) -> PetRosterEntry {
+    let ids = numbers.map { PullRequestFixture.make($0).id }
+    return PetRosterEntry(id: ids[0], pullRequestIDs: ids, genome: entry(numbers[0]).genome, label: "stack", stackPosition: StackPosition(index: 1, count: 3))
+}
+
 private extension Yard {
     mutating func run(seconds: Double, random: inout SeededRandom, every: (Yard) -> Void = { _ in }) {
         for _ in 0..<Int(seconds / frameDuration) {
@@ -44,6 +50,47 @@ struct YardTests {
                 #expect(geometry.depthSpan.contains(pet.position.depth))
             }
         }
+    }
+
+    @Test func whenAStackSharesAPetItsOtherPetsGoHome() {
+        var yard = Yard(geometry: geometry)
+        var random = SeededRandom(seed: Seed(4))
+        yard.reconcile(with: roster([1, 2, 3]))
+        yard.run(seconds: 20, random: &random)
+
+        yard.reconcile(with: PetRoster(entries: [sharedEntry([1, 2, 3])]))
+        #expect(yard.pets.filter(\.activity.isHeadingHome).count == 2)
+        yard.run(seconds: 10, random: &random)
+        #expect(yard.pets.map(\.entry.pullRequestIDs.count) == [3])
+    }
+
+    @Test func aStacksPetCarriesOnWhenItsFirstPullRequestIsDone() {
+        var yard = Yard(geometry: geometry)
+        var random = SeededRandom(seed: Seed(5))
+        yard.reconcile(with: PetRoster(entries: [sharedEntry([1, 2, 3])]))
+        yard.run(seconds: 20, random: &random)
+        let before = yard.pets[0]
+        yard.hold(before.id)
+
+        yard.reconcile(with: PetRoster(entries: [sharedEntry([2, 3])]))
+        let after = yard.pets[0]
+        #expect(yard.pets.count == 1)
+        #expect(after.id == PullRequestFixture.make(2).id)
+        #expect(after.position == before.position, "the same pet, not a new one from the door")
+        #expect(!after.activity.isHeadingHome)
+        #expect(after.activity == .attending, "still held after the hand-over")
+        #expect(yard.currentID(of: before.id) == after.id, "whoever was holding it can find it again")
+        yard.release(yard.currentID(of: before.id))
+        #expect(yard.pets[0].activity != .attending)
+    }
+
+    @Test func petsWaitingAtTheDoorComeOutAsTheyAreNow() {
+        var yard = Yard(geometry: geometry)
+        var random = SeededRandom(seed: Seed(6))
+        yard.reconcile(with: roster([1, 2]))
+        yard.reconcile(with: PetRoster(entries: [sharedEntry([1, 2])]))
+        yard.run(seconds: 5, random: &random)
+        #expect(yard.pets.map(\.entry.pullRequestIDs.count) == [2])
     }
 
     @Test func petsThatLeaveTheRosterGoHome() {

@@ -26,6 +26,15 @@ enum DebugSnapshots {
                     card.frame = CGRect(origin: .zero, size: card.fittingSize)
                     try write(card, to: directory.appending(path: "pet-card.png"))
                 }
+                if let board = model.board, let entry = board.presence.roster(petsAreInside: false).entries.first(where: { $0.pullRequestIDs.count > 1 }) {
+                    let members = entry.pullRequestIDs.compactMap { model.snapshot?.pullRequest(withID: $0) }
+                    let card = NSHostingView(rootView: StackCardView(
+                        members: members.map { ($0, board.presence.stackPosition(of: $0)) },
+                        onOpen: { _ in }, onDismiss: { _ in }, onMute: { _ in }
+                    ).background(Color(nsColor: .windowBackgroundColor)))
+                    card.frame = CGRect(origin: .zero, size: card.fittingSize)
+                    try write(card, to: directory.appending(path: "stack-card.png"))
+                }
                 // The dashboard at its minimum width, where rows are most cramped.
                 let narrowDashboard = NSHostingView(rootView: DashboardView(model: model, updates: updates, showSettings: {}))
                 narrowDashboard.frame = CGRect(x: 0, y: 0, width: 900, height: 520)

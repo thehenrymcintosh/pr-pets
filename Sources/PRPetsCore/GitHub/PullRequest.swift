@@ -62,6 +62,10 @@ public struct LineDelta: Hashable, Codable, Sendable {
         self.deletions = deletions
         self.changedFiles = changedFiles
     }
+
+    public static func + (lhs: LineDelta, rhs: LineDelta) -> LineDelta {
+        LineDelta(additions: lhs.additions + rhs.additions, deletions: lhs.deletions + rhs.deletions, changedFiles: lhs.changedFiles + rhs.changedFiles)
+    }
 }
 
 public struct BranchPair: Hashable, Codable, Sendable {

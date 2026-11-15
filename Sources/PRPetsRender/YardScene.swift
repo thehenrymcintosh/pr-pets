@@ -32,6 +32,17 @@ public struct HoverCard: Hashable, Sendable {
         self.reference = reference
         self.lineDelta = lineDelta
     }
+
+    /// Sums up the PRs a pet stands for, bottom of the stack first: the first one's title, and every one's lines.
+    public init?(petID: PullRequestID, pullRequests: [PullRequest]) {
+        guard let first = pullRequests.first else { return nil }
+        self.init(
+            petID: petID,
+            title: first.title,
+            reference: pullRequests.count == 1 ? first.shortReference : "\(first.shortReference) and \(pullRequests.count - 1) more",
+            lineDelta: pullRequests.dropFirst().map(\.lineDelta).reduce(first.lineDelta, +)
+        )
+    }
 }
 
 public enum SceneHit: Hashable, Sendable {
